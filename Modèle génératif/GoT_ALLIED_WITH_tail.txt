@@ -1,0 +1,296 @@
+House Allyrion of Godsgrace
+House Ambrose
+House Arryn of the Eyrie
+House Ashford of Ashford
+House Baelish of Harrenhal
+House Baelish of the Fingers
+House Ball
+House Banefort of Banefort
+House Baratheon of Dragonstone
+House Baratheon of King's Landing
+House Baratheon of Storm's End
+House Bar Emmon of Sharp Point
+House Beesbury of Honeyholt
+House Belmore of Strongsong
+House Bettley
+House Blackbar of Bandallon
+House Blackfyre of King's Landing
+House Blackmont of Blackmont
+House Blacktyde of Blacktyde
+House Blackwood of Raventree Hall
+House Blanetree
+House Blount
+House Boggs of Crackclaw Point
+House Bolling
+House Bolton of the Dreadfort
+House Borrell of Sweetsister
+House Botley of Lordsport
+House Bracken of Stone Hedge
+House Brax of Hornvale
+House Broom
+House Brune of Brownhollow
+House Brune of the Dyre Den
+House Buckler of Bronzegate
+House Buckwell of the Antlers
+House Bulwer of Blackcrown
+House Bushy
+House Butterwell
+House Byrch
+House Bywater
+House Cafferen of Fawnton
+House Caron of Nightsong
+House Cassel
+House Casterly of Casterly Rock
+House Caswell of Bitterbridge
+House Celtigar of Claw Isle
+House Cerwyn of Cerwyn
+House Charlton
+House Chelsted
+House Chester of Greenshield
+House Chyttering
+House Clegane
+House Clifton
+House Cockshaw
+House Codd
+House Coldwater of Coldwater Burn
+House Cole
+House Condon
+House Conklyn
+House Connington of Griffin's Roost
+House Corbray of Heart's Home
+House Costayne of Three Towers
+House Cox of Saltpans
+House Crabb
+House Crakehall of Crakehall
+House Crane of Red Lake
+House Cuy of Sunhouse
+House Dalt of Lemonwood
+House Darklyn of Duskendale
+House Darry of Darry
+House Dayne of High Hermitage
+House Dayne of Starfall
+House Deddings
+House Dondarrion of Blackhaven
+House Drinkwater
+House Drumm of Old Wyk
+House Durrandon
+House Dustin of Barrowton
+House Egen
+House Erenford
+House Errol of Haystack Hall
+House Estermont of Greenstone
+House Estren of Wyndhall
+House Farman of Faircastle
+House Farring
+House Farwynd of Sealskin Point
+House Farwynd of the Lonely Light
+House Fell of Felwood
+House Flint of Flint's Finger
+House Flint  of the mountains
+House Flint of Widow's Watch
+House Florent of Brightwater Keep
+House Foote
+House Foote of Nightsong
+House Fossoway of Cider Hall
+House Fossoway of New Barrel
+House Fowler of Skyreach
+House Frey of Riverrun
+House Frey of the Crossing
+House Gardener of Highgarden
+House Gargalen of Salt Shore
+House Gaunt
+House Glover of Deepwood Motte
+House Goodbrook
+House Goodbrother of Hammerhorn
+House Goodbrother of Shatterstone
+House Gower
+House Graceford of Holyhall
+House Grafton of Gulltown
+House Grandison of Grandview
+House Greenfield of Greenfield
+House Grell
+House Greyjoy of Pyke
+House Grimm of Greyshield
+House Haigh
+House Harclay
+House Hardy
+House Hardyng
+House Harlaw of Grey Garden
+House Harlaw of Harlaw
+House Harlaw of Harlaw Hall
+House Harlaw of Harridan Hill
+House Harlaw of the Tower of Glimmering
+House Hastwyck
+House Hasty
+House Hawick of Saltpans
+House Hayford of Hayford
+House Heddle
+House Hetherspoon
+House Hewett of Oakenshield
+House Hightower of the Hightower
+House Hoare of Orkmont
+House Hogg of Sow's Horn
+House Hollard
+House Hornwood of Hornwood
+House Horpe
+House Humble
+House Hunt
+House Hunter of Longbow Hall
+House Inchfield
+House Ironmaker
+House Jast
+House Jordayne of the Tor
+House Karstark of Karhold
+House Kenning of Harlaw
+House Kenning of Kayce
+House Kettleblack
+House Kyndall
+House Lannister of Casterly Rock
+House Lannister of Darry
+House Lannister of Lannisport
+House Lefford of the Golden Tooth
+House Leygood
+House Liddle
+House Locke of Oldcastle
+House Longthorpe of Longsister
+House Longwaters
+House Lonmouth
+House Lorch
+House Lothston of Harrenhal
+House Lychester
+House Lydden of Deep Den
+House Lynderly of the Snakewood
+House Mallery
+House Mallister of Seagard
+House Manderly of White Harbor
+House Manwoody of Kingsgrave
+House Marbrand of Ashemark
+House Massey of Stonedance
+House Meadows of Grassy Vale
+House Merlyn of Pebbleton
+House Merryweather of Longtable
+House Mertyns of Mistwood
+House Mollen
+House Moore
+House Mooton of Maidenpool
+House Moreland
+House Mormont of Bear Island
+House Morrigen of Crow's Nest
+House Mudd of Oldstones
+House Mullendore of Uplands
+House Musgood
+House Myre of Harlaw
+House Nayland of Hag's Mire
+House Norcross
+House Norrey
+House Norridge
+House Nymeros Martell of Sunspear
+House Oakheart of Old Oak
+House Osgrey of Standfast
+House Paege
+House Payne
+House Peake of Starpike
+House Peasebury of Poddingfield
+House Peckledon
+House Penrose of Parchments
+House Piper of Pinkmaiden
+House Plumm
+House Poole
+House Prester of Feastfires
+House Qoherys of Harrenhal
+House Qorgyle of Sandstone
+House Rambton
+House Redbeard
+House Redfort of Redfort
+House Redwyne of the Arbor
+House Reed of Greywater Watch
+House Reyne of Castamere
+House Rhysling
+House Risley
+House Roote of Lord Harroway's Town
+House Rosby of Rosby
+House Rowan of Goldengrove
+House Royce of Runestone
+House Royce of the Gates of the Moon
+House Ruttiger
+House Ryger of Willow Wood
+House Rykker of Duskendale
+House Ryswell of the Rills
+House Saltcliffe of Saltcliffe
+House Santagar of Spottswood
+House Sarsfield of Sarsfield
+House Seaworth of Cape Wrath
+House Selmy of Harvest Hall
+House Serry of Southshield
+House Sharp
+House Shepherd
+House Shett of Gull Tower
+House Slate of Blackpool
+House Slynt of Harrenhal
+House Smallwood of Acorn Hall
+House Sparr of Great Wyk
+House Spicer of Castamere
+House Stackspear
+House Staedmon of Broad Arch
+House Stark of Winterfell
+House Staunton of Rook's Rest
+House Stokeworth of Stokeworth
+House Stonehouse of Old Wyk
+House Stonetree of Harlaw
+House Stout of Goldgrass
+House Strickland
+House Strong of Harrenhal
+House Sunderland of the Three Sisters
+House Sunglass of Sweetport Sound
+House Swann of Stonehelm
+House Swyft of Cornfield
+House Tallhart of Torrhen's Square
+House Tarbeck of Tarbeck Hall
+House Targaryen of King's Landing
+House Tarly of Horn Hill
+House Tarth of Evenfall Hall
+House Tawney of Orkmont
+House Templeton
+House Thenn
+House Thorne
+House Toland of Ghost Hill
+House Tollett of the Grey Glen
+House Torrent of Littlesister
+House Toyne
+House Trant of Gallowsgrey
+House Tully of Riverrun
+House Turnberry
+House Tyrell of Brightwater Keep
+House Tyrell of Highgarden
+House Uffering
+House Uller of Hellholt
+House Umber of the Last Hearth
+House Vaith of the Red Dunes
+House Vance of Atranta
+House Vance of Wayfarer's Rest
+House Varner
+House Velaryon of Driftmark
+House Vikary
+House Volmark
+House Vypren
+House Vyrwel of Darkdell
+House Wagstaff
+House Waxley of Wickenden
+House Wayn
+House Waynwood of Ironoaks
+House Weaver
+House Webber of Coldmoat
+House Wells
+House Westerling of the Crag
+House Whent of Harrenhal
+House Willum
+House Wode
+House Woods
+House Woolfield
+House Wull
+House Wylde of Rain House
+House Wynch of Iron Holt
+House Wythers
+House Yarwyck
+House Yew
+House Yronwood of Yronwood
