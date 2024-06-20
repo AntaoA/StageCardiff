@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022/Debian) (preloaded format=pdflatex 2024.3.22)  19 JUN 2024 17:21
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022/Debian) (preloaded format=pdflatex 2024.3.22)  20 JUN 2024 20:14
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -523,11 +523,39 @@ Underfull \hbox (badness 10000) in paragraph at lines 84--103
  []
 
 [4]
-Underfull \hbox (badness 10000) in paragraph at lines 104--111
+Overfull \hbox (6.26715pt too wide) in paragraph at lines 113--140
+\T1/lmr/m/n/10.95 Ça per-met de sor-tir la rè-gle Habite(X,Y) $\OMS/lmsy/m/n/10
+.95 ^$ \T1/lmr/m/n/10.95 Langue_officielle(Y,Z) $\OMS/lmsy/m/n/10.95 !$ \T1/lmr
+/m/n/10.95 Parle_langue(X,Z).x 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 113--140
 
  []
 
-[5] (./rapport.aux) ) 
+
+Underfull \hbox (badness 10000) in paragraph at lines 113--140
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 113--140
+
+ []
+
+
+Overfull \hbox (36.2917pt too wide) in paragraph at lines 113--140
+\T1/lmr/m/n/10.95 https://datascience.stackexchange.com/questions/126187/cross-
+attention-mask-in-transformers 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 113--140
+
+ []
+
+[5] [6] (./rapport.aux) ) 
 Here is how much of TeX's memory you used:
  7437 strings out of 476091
  139861 string characters out of 5794081
@@ -536,20 +564,20 @@ Here is how much of TeX's memory you used:
  554724 words of font info for 71 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  108i,7n,106p,10619b,270s stack positions out of 10000i,1000n,20000p,200000b,200000s
-{/usr/share/texmf/fonts/enc/dvips/lm/lm-rm.enc}{/usr/share
-/texmf/fonts/enc/dvips/lm/lm-mathsy.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm
--mathex.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm-mathit.enc}{/usr/share/texm
-f/fonts/enc/dvips/lm/lm-ec.enc}</usr/share/texmf/fonts/type1/public/lm/lmex10.p
-fb></usr/share/texmf/fonts/type1/public/lm/lmmi10.pfb></usr/share/texmf/fonts/t
-ype1/public/lm/lmmi6.pfb></usr/share/texmf/fonts/type1/public/lm/lmmi8.pfb></us
-r/share/texmf/fonts/type1/public/lm/lmr10.pfb></usr/share/texmf/fonts/type1/pub
-lic/lm/lmr12.pfb></usr/share/texmf/fonts/type1/public/lm/lmr8.pfb></usr/share/t
-exmf/fonts/type1/public/lm/lmssbx10.pfb></usr/share/texmf/fonts/type1/public/lm
-/lmsy10.pfb>
-Output written on rapport.pdf (5 pages, 131577 bytes).
+{/usr/share/texmf/fonts/enc/dvips/lm/lm-rm.enc}{/usr/s
+hare/texmf/fonts/enc/dvips/lm/lm-mathsy.enc}{/usr/share/texmf/fonts/enc/dvips/l
+m/lm-mathex.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm-mathit.enc}{/usr/share/
+texmf/fonts/enc/dvips/lm/lm-ec.enc}</usr/share/texmf/fonts/type1/public/lm/lmex
+10.pfb></usr/share/texmf/fonts/type1/public/lm/lmmi10.pfb></usr/share/texmf/fon
+ts/type1/public/lm/lmmi6.pfb></usr/share/texmf/fonts/type1/public/lm/lmmi8.pfb>
+</usr/share/texmf/fonts/type1/public/lm/lmr10.pfb></usr/share/texmf/fonts/type1
+/public/lm/lmr12.pfb></usr/share/texmf/fonts/type1/public/lm/lmr8.pfb></usr/sha
+re/texmf/fonts/type1/public/lm/lmssbx10.pfb></usr/share/texmf/fonts/type1/publi
+c/lm/lmsy10.pfb>
+Output written on rapport.pdf (6 pages, 135538 bytes).
 PDF statistics:
- 68 PDF objects out of 1000 (max. 8388607)
- 46 compressed objects within 1 object stream
+ 71 PDF objects out of 1000 (max. 8388607)
+ 48 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  21 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -109,4 +109,32 @@ En effet je veux que les input soit de taille 2 (noeud de départ et noeud d'arr
 Autre chose tricky à géré c'est lorsqu'il y a plusieurs relations différentes entre les mêmes noeuds. Ça m'a pris pas mal de temps.\\
 J'ai géré en choisissant aléatoirement quel relation je prennais. Peut être d'autre manière où les probas sont pondéré (ex : si une relation est beaucoup plus présente dans le graphe que l'autre) mais on verra plus tard si jamais.\\
 Autre problème d'avoir les inputs et les outputs de taille différente c'est pour la MultiHeadCrossAttention
+\section*{Jeudi 20-06 :}
+J'ai tout mis au propre dans un github, c'est mieux !\\
+J'ai séparer mes fichier pour avoir un module\_transformer et un truc avec les données, c'est mieux.\\
+Je trouves quelques bug, c'est chiant, ça prend du temps, mais ils se corrigent.\\
+J'ai rajouter une fonction de prédiction.\\
+Meeting avec Akash : Je dois rajouter les relations inverse.\\
+En entrée j'ai pas d'entité, mais juste une relation car le but c'est de trouver une séquence de relation qui donne la même chose. Exemple :\\
+relation : Parle\_langue.\\
+prédiction : Habite, Langue\_officielle.\\
+Ça permet de sortir la règle Habite(X,Y) $\wedge$ Langue\_officielle(Y,Z) $\to$ Parle\_langue(X,Z).x\\
+\\
+Je suppose donc que nos random walk prennent deux noeuds en relations et fond des walks un peut autour avant de revenir. Va falloir que je regarde comment faire ça...\\
+\\
+Ok j'ai essayer de me rebaser sur nn.Transformer mais c'est vraiment bizarre.\\
+J'ai viré les noeuds en entré pour prendre juste des relation.\\
+Je modifie en conséquence tout mes trucs.\\
+J'accroche pas mal au niveau des masques.\\
+À priori un masque est de taille batch $\times$ tailleTxt $\times$ tailleTxt.\\
+Pour le cross, je sais pas si c'est le plus petit ou le plus gros texte.\\
+Pour les autres déjà : \\
+Après embedding, les données sont de taille : batch $\times$ tailleTxt $\times$ d\_model\\
+Notre masque est lui de taille : batch $\times$ tailleTxt $\times$ tailleTxt.\\
+Ok j'ai la ref le masque n'est unilisé que dans le calcul avec les tenseur key, query et value.\\
+\\
+Ok à priori j'ai de bon masques. Je me suis pas mal aidé visuellement de cette question dans un forum :\\
+https://datascience.stackexchange.com/questions/126187/cross-attention-mask-in-transformers\\
+\\
+Maintenant il faut que je modifie encore deux trois trucs dans le modèle de transformer et après ça sera OK je pense. Ah et la marche aléatoire aussi.
 \end{document}
