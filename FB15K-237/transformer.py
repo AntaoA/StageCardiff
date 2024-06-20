@@ -14,28 +14,22 @@ PAD_TOKEN = '<PAD>'
 with open('Data/list_noeuds.txt', 'r') as file:
     nodes = file.readlines()
 
-with open('Data/list_rel.txt', 'r') as file:
-    relations = file.readlines()
-    
-    
-# On ajoute les tokens. Pas besoin de PAD dans pour les nodes car ils ne sont utile qu'en entrée et il y en a tout le temps 2, donc tout le temps la même taille.
-
-nodes.append(START_TOKEN)
-nodes.append(END_TOKEN)
+relations = []
 
 relations.append(START_TOKEN)
 relations.append(END_TOKEN)
 relations.append(PAD_TOKEN)
 
+with open('Data/list_rel.txt', 'r') as file:
+    relations += file.readlines()
+    
+    
+# On ajoute les tokens. Pas besoin de PAD dans pour les nodes car ils ne sont utile qu'en entrée et il y en a tout le temps 2, donc tout le temps la même taille.
+
+
 
 index_to_rel = {k:v.strip() for k,v in enumerate(relations)}
 rel_to_index = {v.strip():k for k,v in enumerate(relations)}
-
-index_to_nodes = {k:v.strip() for k,v in enumerate(nodes)}
-nodes_to_index = {v.strip():k for k,v in enumerate(nodes)}
-
-with open('Data/train.txt', 'r') as file:
-    list_triplets = file.readlines()
 
 # création du graphe
 G = nx.MultiDiGraph()
@@ -46,36 +40,15 @@ with open('Data/train.txt', 'r') as file:
         G.add_node(n2)
         G.add_edge(n1, n2, relation = r)
         
-# cette marche aléatoire est vraiment nulle
-
-def random_walk(graph, start_node, end_node, max_length):
-    path = [start_node]
-    current_node = start_node
-    
-    for _ in range(max_length):
-        neighbors = list(graph.successors(current_node))
-        if not neighbors:
-            break
-        next_node = random.choice(neighbors)
-        path.append(next_node)
-        current_node = next_node
-        if current_node == end_node:
-            break
-    
-    return path
-
-
-# déjà un peu mieux. Je met un poids sur chaque voisin, la longueur du plus petit chemin jusqu'à la fin
+# Je met un poids sur chaque voisin, la longueur du plus petit chemin jusqu'à la fin
 # pondéré en maxsoft * 2 car desfois il y a vraiment beaucoup de voisins
 
-def biased_random_walk(graph, start_node, end_node, max_length, alpha=2.0):
-    path = [start_node]
+def random_walk(graph, start_node, end_node, max_length, alpha=2.0, rti=rel_to_index, S=START_TOKEN, P=PAD_TOKEN, E=END_TOKEN):
+    path = [rti[S]]
     current_node = start_node
     trouve = False
-    
-    for _ in range(max_length):
+    for i in range(max_length):
         neighbors = list(graph.successors(current_node))
-        
         if not neighbors:
             break
         # Calculer les probabilités pour choisir le prochain nœud
@@ -84,56 +57,21 @@ def biased_random_walk(graph, start_node, end_node, max_length, alpha=2.0):
         weights = np.exp(-alpha * distances)
         probabilities = weights / np.sum(weights)
 
-        # Choisir le prochain nœud en fonction des probabilités calculées
+        # Choisir le prochain noeud en fonction des probabilités calculées
         next_node = random.choices(neighbors, weights=probabilities)[0]
-        
-        path.append(next_node)
+        d = graph.get_edge_data(current_node, next_node)
+        r = d[random.randint(0, (len(d)-1))]['relation']
+        path.append(rti[r])
         current_node = next_node
-        
         if current_node == end_node:
             trouve = True
+            path.append(rti[E])
+            path += [rti[P]] * (max_length - i - 1)
             break
-    
-    print(trouve)
+    if not trouve:
+        path = []
     return path
 
-paths = []
-for i in range(3):
-    print(i)
-    match = False
-    while not match:
-        node1 = random.choice(list(G.nodes))
-        node2 = random.choice(list(G.nodes))
-        if nx.has_path(G, node1, node2):
-            match = True
-    paths.append(biased_random_walk(G, node1, node2, 100, 2))
-    
-    
-
-# Extraire les séquences de relations entre deux nœuds
-
-nodes_input = []
-relation_sequences = []
-for path in paths:
-    path_rel = []
-    
-    # on rajoute le noeud de départ et d'arrivé dans nodes_input
-    path_node = []
-    path_node.append(path[0])
-    path_node.append(path[-1])
-    nodes_input.append(path_node)
-    
-    for i in range(1, len(path)-1):
-        # Obtenir la relation entre les nœuds
-        edge_data = G.get_edge_data(path[i-1], path[i])
-        if edge_data:
-            rel = [data['relation'] for key, data in edge_data.items()]
-            path_rel.append(random.choice(rel)) #gérer le cas où il y a plusieurs relations entre deux mêmes noeuds
-    relation_sequences.append(path_rel)
-
-    
-POURCENTILE = 97
-print( f"{POURCENTILE}e pourcentile - longueur des chemins : {np.percentile([len(x) for x in relation_sequences], POURCENTILE)}" )
 
 NEG_INFTY = -1e9
 
@@ -144,17 +82,33 @@ ffn_hidden = 2048
 num_heads = 8
 drop_prob = 0.1
 num_layers = 1
-max_sequence_length = 100
+src_length = 1
+tgt_length = 20
 rel_vocab_size = len(relations)
+nb_paths = 3
+
+
+
+rel_src = []
+rel_tgt = []
+
+for i in range(nb_paths):
+    print(i)
+    edge = random.choice(list(G.edges(data=True)))
+    node1, node2, r = edge[0], edge[1], edge[2]['relation']
+    path = random_walk(G, node1, node2, tgt_length-2, 2)
+    if not path == []:
+        rel_src.append([rel_to_index[r]])
+        rel_tgt.append(path)
+    
 
 transformer = t.Transformer(d_model, 
                           ffn_hidden,
                           num_heads, 
                           drop_prob, 
                           num_layers, 
-                          max_sequence_length,
+                          tgt_length,
                           rel_vocab_size,
-                          nodes_to_index,
                           rel_to_index,
                           START_TOKEN, 
                           END_TOKEN,
@@ -188,7 +142,7 @@ class TextDataset(t.Dataset):
 
         return nodes_input, padded_relation_sequences
     
-dataset = TextDataset(nodes_input, relation_sequences)
+dataset = TextDataset(rel_src, rel_tgt)
 
 train_loader = t.DataLoader(dataset, batch_size, collate_fn = dataset.collate_fn)
 iterator = iter(train_loader)
@@ -220,19 +174,19 @@ for epoch in range(num_epochs):
     iterator = iter(train_loader)
     for batch_num, batch in enumerate(iterator):
         transformer.train()
-        nodes_batch, rel_batch = batch
-        encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask = t.create_masks(nodes_batch, rel_batch, max_sequence_length, NEG_INFTY)
+        src, tgt = batch
+        src_self_attention_mask, tgt_self_attention_mask, cross_attention_mask = t.create_masks(src, tgt, src_length, tgt_length, rel_to_index[PAD_TOKEN], NEG_INFTY)
         optim.zero_grad()
-        rel_predictions = transformer(nodes_batch,
-                                         rel_batch,
-                                         encoder_self_attention_mask.to(device), 
-                                         decoder_self_attention_mask.to(device), 
-                                         decoder_cross_attention_mask.to(device),
-                                         enc_start_token=False,
-                                         enc_end_token=False,
-                                         dec_start_token=True,
-                                         dec_end_token=True)
-        labels = transformer.decoder.sentence_embedding.batch_tokenize(rel_batch, start_token=False, end_token=True)
+        rel_predictions = transformer(  src,
+                                        tgt,
+                                        src_self_attention_mask.to(device), 
+                                        tgt_self_attention_mask.to(device), 
+                                        cross_attention_mask.to(device),
+                                        enc_start_token=False,
+                                        enc_end_token=False,
+                                        dec_start_token=True,
+                                        dec_end_token=True)
+        labels = transformer.decoder.sentence_embedding.batch_tokenize(rel_batch)
         loss = criterian(
             rel_predictions.view(-1, rel_vocab_size).to(device),
             labels.view(-1).to(device)
@@ -258,8 +212,9 @@ for epoch in range(num_epochs):
 
 # nodes : ['n1', 'n2']
 transformer.eval()
-def predict(nodes):
-  relation_sequence = ([],)
+def predict(nodes,):
+  relation_sequence = (["<START>"],)
+  nodes = (nodes,)
   for i in range(max_sequence_length):
     encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask= t.create_masks(nodes, relation_sequence, max_sequence_length, NEG_INFTY)
     predictions = transformer(nodes,

@@ -4,11 +4,15 @@ from torch import nn
 import torch.nn.functional as F
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
-
+from itertools import product
 
 
 def get_device():
-    return torch.device('cuda')
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    else:
+        device = torch.device("cpu")    
+    return device
 
 def scaled_dot_product(q, k, v, mask=None):
     d_k = q.size()[-1]
@@ -156,7 +160,7 @@ class EncoderLayer(nn.Module):
     
 class SequentialEncoder(nn.Sequential):
     def forward(self, *inputs):
-        x, self_attention_mask  = inputs
+        x, self_attention_mask = inputs
         for module in self._modules.values():
             x = module(x, self_attention_mask)
         return x
@@ -282,14 +286,13 @@ class Transformer(nn.Module):
                 num_layers,
                 max_sequence_length, 
                 rel_vocab_size,
-                nodes_to_index,
                 rel_to_index,
                 START_TOKEN, 
                 END_TOKEN, 
                 PAD_TOKEN
                 ):
         super(Transformer, self).__init__()
-        self.encoder = Encoder(d_model, ffn_hidden, num_heads, drop_prob, num_layers, 2, nodes_to_index, START_TOKEN, END_TOKEN, PAD_TOKEN)
+        self.encoder = Encoder(d_model, ffn_hidden, num_heads, drop_prob, num_layers, 1, rel_to_index, START_TOKEN, END_TOKEN, PAD_TOKEN)
         self.decoder = Decoder(d_model, ffn_hidden, num_heads, drop_prob, num_layers, max_sequence_length, rel_to_index, START_TOKEN, END_TOKEN, PAD_TOKEN)
         self.linear = nn.Linear(d_model, rel_vocab_size)
         self.device = torch.device('cuda')
@@ -311,28 +314,37 @@ class Transformer(nn.Module):
     
     
     
-def create_masks(nodes_batch, rel_batch, max_sequence_length, NEG_INFTY):
-    num_nodes = len(nodes_batch)
-    num_rel = len(rel_batch)
-    look_ahead_mask = torch.full([max_sequence_length, max_sequence_length] , True)
-    look_ahead_mask = torch.triu(look_ahead_mask, diagonal=1)
-    encoder_PAD_mask = torch.full([num_nodes, 2, 2] , False)
-    decoder_PAD_mask_self_attention = torch.full([num_rel, max_sequence_length, max_sequence_length] , False)
-    decoder_PAD_mask_cross_attention = torch.full([num_rel, max_sequence_length, max_sequence_length] , False)
+def create_masks(src, tgt , length_src, length_tgt, pad_token, NEG_INFTY):   
+    
+    # Generate look-ahead mask  
+    src_look_ahead_mask = torch.triu(torch.ones(length_src, length_src, dtype=torch.bool), diagonal=1)
+    tgt_look_ahead_mask = torch.triu(torch.ones(length_tgt, length_tgt, dtype=torch.bool), diagonal=1)
+    
+    # Create padding masks
+    src_PAD_mask = create_padding_mask(src, src, length_src, length_src, pad_token)
+    tgt_PAD_mask = create_padding_mask(tgt, tgt, length_tgt, length_tgt, pad_token)
+    cross_PAD_mask = create_padding_mask(src, tgt, length_src, length_tgt, pad_token)
 
-    for idx in range(min(num_nodes, num_rel)):
-      node_sentence_length, rel_sentence_length = len(nodes_batch[idx]), len(rel_batch[idx])
-      node_chars_to_PAD_mask = np.arange(node_sentence_length + 1, 2)
-      rel_chars_to_PAD_mask = np.arange(rel_sentence_length + 1, max_sequence_length)
-      encoder_PAD_mask[idx, :, node_chars_to_PAD_mask] = True
-      encoder_PAD_mask[idx, node_chars_to_PAD_mask, :] = True
-      decoder_PAD_mask_self_attention[idx, :, rel_chars_to_PAD_mask] = True
-      decoder_PAD_mask_self_attention[idx, rel_chars_to_PAD_mask, :] = True
-      decoder_PAD_mask_cross_attention[idx, :, node_chars_to_PAD_mask] = True
-      decoder_PAD_mask_cross_attention[idx, rel_chars_to_PAD_mask, :] = True
+    
+    # Apply NEG_INFTY where necessary
+    src_self_attention_mask = torch.where(src_look_ahead_mask + src_PAD_mask, NEG_INFTY, 0)
+    tgt_self_attention_mask = torch.where(tgt_look_ahead_mask + tgt_PAD_mask, NEG_INFTY, 0)
 
-    encoder_self_attention_mask = torch.where(encoder_PAD_mask, NEG_INFTY, 0)
-    decoder_self_attention_mask =  torch.where(look_ahead_mask + decoder_PAD_mask_self_attention, NEG_INFTY, 0)
-    decoder_cross_attention_mask = torch.where(decoder_PAD_mask_cross_attention, NEG_INFTY, 0)
-    return encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask
+    
+
+    cross_attention_mask = torch.where(cross_PAD_mask, NEG_INFTY, 0)
+
+
+    return src_self_attention_mask, tgt_self_attention_mask, cross_attention_mask
+
+def create_padding_mask(src, tgt, len_src, len_tgt, pad_token):
+    # Créer un masque de padding où les valeurs égales à pad_token sont True, et False sinon
+    n_batch = len(src)
+    padding_mask = torch.zeros(n_batch, len_src, len_tgt, dtype=torch.bool)
+    for n,i,j in product(range(n_batch),range(len_src),range(len_tgt)):
+        if src[n][i] == pad_token:
+            padding_mask[n][i][j] = True
+        if tgt[n][j] == pad_token:
+            padding_mask[n][i][j] = True
+    return padding_mask
 
