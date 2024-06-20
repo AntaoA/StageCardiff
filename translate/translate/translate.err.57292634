@@ -1,0 +1,40 @@
+/home/c.c24080479/.conda/envs/Cardiff/lib/python3.12/site-packages/torch/cuda/__init__.py:619: UserWarning: Can't initialize NVML
+  warnings.warn("Can't initialize NVML")
+Traceback (most recent call last):
+  File "/nfshome/store03/users/c.c24080479/Stage/transformer/translate/T2.py", line 493, in <module>
+    fr_predictions = transformer(eng_batch,
+                     ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/c.c24080479/.conda/envs/Cardiff/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/c.c24080479/.conda/envs/Cardiff/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nfshome/store03/users/c.c24080479/Stage/transformer/translate/T2.py", line 304, in forward
+    x = self.encoder(x, encoder_self_attention_mask, start_token=enc_start_token, end_token=enc_end_token)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/c.c24080479/.conda/envs/Cardiff/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/c.c24080479/.conda/envs/Cardiff/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nfshome/store03/users/c.c24080479/Stage/transformer/translate/T2.py", line 181, in forward
+    x = self.sentence_embedding(x, start_token, end_token)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/c.c24080479/.conda/envs/Cardiff/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/c.c24080479/.conda/envs/Cardiff/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nfshome/store03/users/c.c24080479/Stage/transformer/translate/T2.py", line 73, in forward
+    x = self.batch_tokenize(x, start_token, end_token)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nfshome/store03/users/c.c24080479/Stage/transformer/translate/T2.py", line 67, in batch_tokenize
+    tokenized.append( tokenize(batch[sentence_num], start_token, end_token) )
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nfshome/store03/users/c.c24080479/Stage/transformer/translate/T2.py", line 56, in tokenize
+    sentence_word_indicies = [self.language_to_index[token] for token in list(sentence)]
+                              ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+KeyError: '’'
