@@ -11,7 +11,7 @@ START_TOKEN = '<START>'
 END_TOKEN = '<END>'
 PAD_TOKEN = '<PAD>'
 
-with open('Data/list_noeuds.txt', 'r') as file:
+with open('FB15K-237/Data/list_noeuds.txt', 'r') as file:
     nodes = file.readlines()
 
 relations = []
@@ -20,7 +20,7 @@ relations.append(START_TOKEN)
 relations.append(END_TOKEN)
 relations.append(PAD_TOKEN)
 
-with open('Data/list_rel.txt', 'r') as file:
+with open('FB15K-237/Data/list_rel.txt', 'r') as file:
     relations += file.readlines()
     
     
@@ -33,7 +33,7 @@ rel_to_index = {v.strip():k for k,v in enumerate(relations)}
 
 # création du graphe
 G = nx.MultiDiGraph()
-with open('Data/train.txt', 'r') as file:
+with open('FB15K-237/Data/train.txt', 'r') as file:
     for line in file:
         n1, r, n2 = line.strip().split('\t')
         G.add_node(n1)
