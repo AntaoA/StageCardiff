@@ -1,8 +1,8 @@
-\documentclass{scrartcl}
+\documentclass{article}
 \usepackage{cmap}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
-\usepackage[english]{babel}
+\usepackage[french]{babel}
 \usepackage{amsfonts}
 \usepackage{xcolor}
 \usepackage{amsmath}
@@ -12,6 +12,8 @@
 \title{Rapport - Stage Cardiff}
 \author{Antao Amory}
 \date{$\quad$}
+\hbadness=10000
+\hfuzz=100pt
 
 \begin{document}
 \maketitle
@@ -19,14 +21,15 @@
 \section*{Mardi 11-06 :}
 \section*{Mercredi 12-06 :}
 \section*{Jeudi 13-06 :}
-\section*{Vendredi 14-06 :}
-Matin ça clique.
-Meeting avec Steven Schockaert, il a recentré le truc sur les transformers.\\
+\section*{Vendredi 14-06 :} 
+Matin ça clique. Meeting avec Steven Schockaert, il a recentré le truc sur les transformers.\\
 Prochaine étape : écrire un transformer from scratch, les chemins dans le graphe de connaissance vont être sous la forme de séquences (quoi que ça veuille dire), et après il faudras voir pour les marches aléatoires (où c'est nécessaire, comment l'implémenter, à quoi ça sert ??).\\
 \\
 Bon pour le transformer, il va falloir le faire from scratch (car c'est tricher si on en utilise un pré-entrainé). Attention, il existe deux principales tâches pour ces transformers : soit on a une phrase et on masque un mot et il faut le retrouver (ça, ça ne nous intéresse pas) ou soit il faut déterminer comment la va être la suite d'une phrase (ça ça nous intéresse !).\\
 \\
-Pour m'introduire au sujet des transformers, je vais regarder : https://jalammar.github.io/illustrated-transformer/ (et en particulier la traduction française.\\
+Pour m'introduire au sujet des transformers, je vais regarder : \\
+https://jalammar.github.io/illustrated-transformer/\\
+(et en particulier la traduction française.\\
 On va résumer ça ici :\\
 \\
 \subparagraph*{Le seq2seq et le processus d'attention}
@@ -95,7 +98,7 @@ Pour se faire je doit traiter les données.\\
 Après j'importe mes données de trainning et je fais une marche aléatoire pour obtenir une liste de chemin entre des points.\\
 Première version : complètement aléatoire mais ça n'a aucune chance de donner quoi que ce soit.\\
 Second version : j'utilise networkx et pour mettre une distance entre deux points et pouvoir pondérer mes probabilités.\\	
-Je fais en fonction du plus court chemin jusqu'au noeud d'arrivé (nx.shortest\_path\_length).\\
+Je fais en fonction du plus court chemin jusqu'au noeud d'arrivé (avec la fonction nx.shortest\_path\_length).\\
 Je normalise après avec un sorfmax (où le poids est multiplié par deux car desfois il y a vraiment beaucoup de voisins).\\
 Le random walk marche très bien, mais en réalité c'est tout bonnement inenvisageable car beaucoup trop long à calculer sur de grandes entrées.\\
 Après je fais une fonction pour obtenir des random walk entre point aléatoire.\\
@@ -118,9 +121,10 @@ Meeting avec Akash : Je dois rajouter les relations inverse.\\
 En entrée j'ai pas d'entité, mais juste une relation car le but c'est de trouver une séquence de relation qui donne la même chose. Exemple :\\
 relation : Parle\_langue.\\
 prédiction : Habite, Langue\_officielle.\\
-Ça permet de sortir la règle Habite(X,Y) $\wedge$ Langue\_officielle(Y,Z) $\to$ Parle\_langue(X,Z).x\\
+Ça permet de sortir la règle :\\
+Habite(X,Y) $\wedge$ Langue\_officielle(Y,Z) $\to$ Parle\_langue(X,Z).x\\
 \\
-Je suppose donc que nos random walk prennent deux noeuds en relations et fond des walks un peut autour avant de revenir. Va falloir que je regarde comment faire ça...\\
+Je suppose donc que nos random walk prennent deux noeuds     en relations et fond des walks un peut autour avant de revenir. Va falloir que je regarde comment faire ça...\\
 \\
 Ok j'ai essayer de me rebaser sur nn.Transformer mais c'est vraiment bizarre.\\
 J'ai viré les noeuds en entré pour prendre juste des relation.\\
@@ -136,5 +140,6 @@ Ok j'ai la ref le masque n'est unilisé que dans le calcul avec les tenseur key,
 Ok à priori j'ai de bon masques. Je me suis pas mal aidé visuellement de cette question dans un forum :\\
 https://datascience.stackexchange.com/questions/126187/cross-attention-mask-in-transformers\\
 \\
-Maintenant il faut que je modifie encore deux trois trucs dans le modèle de transformer et après ça sera OK je pense. Ah et la marche aléatoire aussi.
+Maintenant il faut que je modifie encore deux trois trucs dans le modèle de transformer et après ça sera OK je pense.\\
+Ah et la marche aléatoire aussi.
 \end{document}
