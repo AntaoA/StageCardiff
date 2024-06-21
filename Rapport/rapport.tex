@@ -118,7 +118,7 @@ J'ai séparer mes fichier pour avoir un module\_transformer et un truc avec les 
 Je trouves quelques bug, c'est chiant, ça prend du temps, mais ils se corrigent.\\
 J'ai rajouter une fonction de prédiction.\\
 Meeting avec Akash : Je dois rajouter les relations inverse.\\
-En entrée j'ai pas d'entité, mais juste une relation car le but c'est de trouver une séquence de relation qui donne la même chose. Exemple :\\
+En entrée j'ai pas d'entitéx, mais juste une relation car le but c'est de trouver une séquence de relation qui donne la même chose. Exemple :\\
 relation : Parle\_langue.\\
 prédiction : Habite, Langue\_officielle.\\
 Ça permet de sortir la règle :\\
@@ -135,11 +135,33 @@ Pour le cross, je sais pas si c'est le plus petit ou le plus gros texte.\\
 Pour les autres déjà : \\
 Après embedding, les données sont de taille : batch $\times$ tailleTxt $\times$ d\_model\\
 Notre masque est lui de taille : batch $\times$ tailleTxt $\times$ tailleTxt.\\
-Ok j'ai la ref le masque n'est unilisé que dans le calcul avec les tenseur key, query et value.\\
+Ok j'ai la ref le masque n'est utilisé que dans le calcul avec les tenseur key, query et value.\\
 \\
 Ok à priori j'ai de bon masques. Je me suis pas mal aidé visuellement de cette question dans un forum :\\
 https://datascience.stackexchange.com/questions/126187/cross-attention-mask-in-transformers\\
 \\
 Maintenant il faut que je modifie encore deux trois trucs dans le modèle de transformer et après ça sera OK je pense.\\
-Ah et la marche aléatoire aussi.
+Ah et la marche aléatoire aussi.\\
+\section*{Vendredi 21-06 :}
+J'ai commencé par terminer le modèle du transformer pour prendre en entrée une relation au lieu de deux noeuds (potentiellement éloignées).\\
+J'ai aussi rajouter les relations inverse dans la liste des relations.\\
+Ça marche plutôt bien, je suis pas mal content, je vois assez bien comment ça marche maintenant.\\
+Maintenant il faudrait peu être que je m'attaque à l'histoire des random walk. Je ne suis pas exactement comme faire encore.\\
+L'ojectif est de rentrer une relation (prise aléatoirement), de choisir (toujours aléatoirement) deux entités liés par cette relation, puis trouver un chemin reliant ces deux entités.\\
+Je vais déjà tester l'implémentation hyper basique. Full aléatoire mais chemins limité à genre 4 de longueur (en vérifiant bien que je ne mette pas la relation de base (et potentiellement éviter aussi, si la relation est r, d'avoir un chemin x - x-1 - r)).\\
+Ok ça ne marchait pas vraiment. Je garde les probababilités en fonction de la distance à l'arrivé, avec un softmax, mais je fais attention à empêcher la relation d'être prise en premier.\\
+De plus j'ai stocker mes grosses données, le graphe de train, les index, dans des fichier.pickel.\\
+Ça semble fonctioner mais c'est vraiment hyper lent, surtout en mode débuggage.\\
+Ok j'ai trouver comment faire avec networkx. Je peut créer un générateur avec nx.all\_simpls\_paths puis prendre un chemin aléatoire (jepeux même limiter la taille).\\
+Réunion avec Stephan Schockaert.\\
+C'est pas trop mal, ça avance. Là je fini avec mon transformer.\\
+Si je teste sur (h,r,t) il faut que j'empêche de prendre cette relation dans le chemin.\\
+De plus, il faut que j'empêche d'avoir un truc du style (n, r, n') suivit de (n', r-1, n) (mais si c'est une autre relation c'est ok et si les entités sont différentes c'est ok aussi).\\
+Il faudra ensuite que je crée un autre transformer pour classifier mes chemins et voir les quels modélisent réellement une relation et lesquels sont beaucoup mais sûr.\\
+J'ai aussi changé de data, ça devrait être bien plus rapide.\\
+Mon job pour la prochaine semaine est de finir ça (le random walk qui marche bien, avec les contraintes souhaités) puis de voir quels doivent être les bons hyperparamètres pour le transformer (nombre de têtes, de layers, ...).\\
+Ça risque d'être un poil frustrant mais ça avante.\\
+Je devrais ensuite tester mon transformer (sur une partie des chemins aléatoire), puis créé le second comme dit précédemment.\\
+Si j'ai du temps / de la motivation, je pourrais aussi regarder les méthodes LSTM.\\
+Et puis il sera l'heure de s'attaquer aux règles de productions. Potentiellement avec AnyBURL, potentiellement avec autre chose.
 \end{document}
