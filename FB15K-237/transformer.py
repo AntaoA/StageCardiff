@@ -1,4 +1,5 @@
 import module_transformer as t
+import torch
 import numpy as np
 import random
 import networkx as nx
@@ -175,61 +176,55 @@ for epoch in range(num_epochs):
     for batch_num, batch in enumerate(iterator):
         transformer.train()
         src, tgt = batch
+        src = torch.tensor(src).to(device)
+        tgt = torch.tensor(tgt).to(device)
         src_self_attention_mask, tgt_self_attention_mask, cross_attention_mask = t.create_masks(src, tgt, src_length, tgt_length, rel_to_index[PAD_TOKEN], NEG_INFTY)
         optim.zero_grad()
         rel_predictions = transformer(  src,
                                         tgt,
                                         src_self_attention_mask.to(device), 
                                         tgt_self_attention_mask.to(device), 
-                                        cross_attention_mask.to(device),
-                                        enc_start_token=False,
-                                        enc_end_token=False,
-                                        dec_start_token=True,
-                                        dec_end_token=True)
-        labels = transformer.decoder.sentence_embedding.batch_tokenize(rel_batch)
+                                        cross_attention_mask.to(device))
         loss = criterian(
             rel_predictions.view(-1, rel_vocab_size).to(device),
-            labels.view(-1).to(device)
+            tgt.view(-1).to(device)
         ).to(device)
-        valid_indicies = t.torch.where(labels.view(-1) == rel_to_index[PAD_TOKEN], False, True)
+        valid_indicies = t.torch.where(tgt.view(-1) == rel_to_index[PAD_TOKEN], False, True)
         loss = loss.sum() / valid_indicies.sum()
         loss.backward()
         optim.step()
         #train_losses.append(loss.item())
         if batch_num % 100 == 0:
             print(f"Iteration {batch_num} : {loss.item()}")
-            print(f"Nodes: {nodes_batch[0]}")
-            print(f"Path: {rel_batch[0]}")
+            print(f"Input: {src[0]}")
+            print(f"Output: {tgt[0]}")
             rel_sentence_predicted = t.torch.argmax(rel_predictions[0], axis=1)
-            predicted_sentence = ""
+            predicted_sentence = []
             for idx in rel_sentence_predicted:
               if idx == rel_to_index[END_TOKEN]:
                 break
-              predicted_sentence += index_to_rel[idx.item()]
+              predicted_sentence += [idx.item()]
             print(f"Path: {predicted_sentence}")
             print("-------------------------------------------")
 
 
-# nodes : ['n1', 'n2']
 transformer.eval()
-def predict(nodes,):
-  relation_sequence = (["<START>"],)
-  nodes = (nodes,)
-  for i in range(max_sequence_length):
-    encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask= t.create_masks(nodes, relation_sequence, max_sequence_length, NEG_INFTY)
-    predictions = transformer(nodes,
-                              relation_sequence,
-                              encoder_self_attention_mask.to(device), 
-                              decoder_self_attention_mask.to(device), 
-                              decoder_cross_attention_mask.to(device),
-                              enc_start_token=False,
-                              enc_end_token=False,
-                              dec_start_token=True,
-                              dec_end_token=False)
+def predict(num_rel):
+  src = torch.full((1, src_length), num_rel).to(device)
+  tgt = torch.full((1, tgt_length), rel_to_index[PAD_TOKEN]).to(device)
+  for i in range(tgt_length):
+    src_self_attention_mask, tgt_self_attention_mask, cross_attention_mask= t.create_masks(src, tgt,  src_length, tgt_length, rel_to_index[PAD_TOKEN], NEG_INFTY)
+    predictions = transformer(src,
+                              tgt,
+                              src_self_attention_mask.to(device), 
+                              tgt_self_attention_mask.to(device), 
+                              cross_attention_mask.to(device))
     next_token_prob_distribution = predictions[0][i]
-    next_token_index = t.torch.argmax(next_token_prob_distribution).item()
-    next_token = index_to_rel[next_token_index]
-    relation_sequence = (relation_sequence[0] + [next_token], )
-    if next_token == END_TOKEN:
+    next_token = t.torch.argmax(next_token_prob_distribution).item()
+    tgt[0][i] = next_token
+    if next_token == rel_to_index[END_TOKEN]:
       break
-  return relation_sequence[0]
+  return tgt[0]
+
+print("Résultat de la prédiction")
+print(predict(24))
