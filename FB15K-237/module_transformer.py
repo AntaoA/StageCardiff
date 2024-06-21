@@ -288,6 +288,7 @@ class Transformer(nn.Module):
         x = self.encoder(x, encoder_self_attention_mask)
         out = self.decoder(x, y, decoder_self_attention_mask, decoder_cross_attention_mask)
         out = self.linear(out)
+        out = torch.softmax(out, dim=2)
         return out
     
     

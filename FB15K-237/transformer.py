@@ -3,7 +3,8 @@ import torch
 import numpy as np
 import random
 import networkx as nx
-
+import pickle
+import os
 
     
 # Generated this by filtering Appendix code
@@ -12,71 +13,129 @@ START_TOKEN = '<START>'
 END_TOKEN = '<END>'
 PAD_TOKEN = '<PAD>'
 
-with open('FB15K-237/Data/list_noeuds.txt', 'r') as file:
-    nodes = file.readlines()
+chemin = "FB15K-237/Data/"
 
-relations = []
 
-relations.append(START_TOKEN)
-relations.append(END_TOKEN)
-relations.append(PAD_TOKEN)
 
-with open('FB15K-237/Data/list_rel.txt', 'r') as file:
-    relations += file.readlines()
+if os.path.exists(chemin + 'index.pickle'):
+    with open(chemin + 'index.pickle', 'rb') as f:
+        index_to_rel, rel_to_index, rel_vocab_size = pickle.load(f)
+else:
+    relations = []
+
+    relations.append(START_TOKEN)
+    relations.append(END_TOKEN)
+    relations.append(PAD_TOKEN)
+
+    lines = []
+
+    with open(chemin + 'list_rel.txt', 'r') as file:
+        lines += file.readlines()    
     
+    # Ajouter les relation et les relations inverses
+    for line in lines:
+        line = line.strip()
+        relations.append(line)
+        relations.append(line + '-1')
+
     
-# On ajoute les tokens. Pas besoin de PAD dans pour les nodes car ils ne sont utile qu'en entrée et il y en a tout le temps 2, donc tout le temps la même taille.
+    rel_vocab_size = len(relations)
+
+    index_to_rel = {k:v.strip() for k,v in enumerate(relations)}
+    rel_to_index = {v.strip():k for k,v in enumerate(relations)}
+
+
+    with open(chemin + 'index.pickle', 'wb') as f:
+        pickle.dump((index_to_rel, rel_to_index, len(relations)), f)
 
 
 
-index_to_rel = {k:v.strip() for k,v in enumerate(relations)}
-rel_to_index = {v.strip():k for k,v in enumerate(relations)}
 
-# création du graphe
-G = nx.MultiDiGraph()
-with open('FB15K-237/Data/train.txt', 'r') as file:
-    for line in file:
-        n1, r, n2 = line.strip().split('\t')
-        G.add_node(n1)
-        G.add_node(n2)
-        G.add_edge(n1, n2, relation = r)
-        
-# Je met un poids sur chaque voisin, la longueur du plus petit chemin jusqu'à la fin
-# pondéré en maxsoft * 2 car desfois il y a vraiment beaucoup de voisins
+if os.path.exists(chemin + 'graphe_train.pickle'):
+    with open(chemin + 'graphe_train.pickle', 'rb') as f:
+        G = pickle.load(f)
+else:
+    G = nx.MultiDiGraph()
+    # Ajout des noeuds et des arêtes au graphe    
+    with open(chemin + 'train.txt', 'r') as file:
+        for line in file:
+            n1, r, n2 = line.strip().split('\t')
+            G.add_node(n1)
+            G.add_node(n2)
+            G.add_edge(n1, n2, relation = r)
+    with open(chemin + 'graphe_train.pickle', 'wb') as f:
+        pickle.dump(G, f)
 
-def random_walk(graph, start_node, end_node, max_length, alpha=2.0, rti=rel_to_index, S=START_TOKEN, P=PAD_TOKEN, E=END_TOKEN):
+
+# marche aléatoire qui prend deux noeuds, une relation, et qui interdit d'utiliser cette relation directement
+def random_walk(graph, start_node, end_node, relation, max_length, alpha=1.0, rti=rel_to_index, S=START_TOKEN, P=PAD_TOKEN, E=END_TOKEN):
     path = [rti[S]]
     current_node = start_node
     trouve = False
-    for i in range(max_length):
+    for i in range(max_length-2):
         neighbors = list(graph.successors(current_node))
+
         if not neighbors:
             break
+        
         # Calculer les probabilités pour choisir le prochain nœud
         distances = np.array([nx.shortest_path_length(graph, node, end_node) if nx.has_path(graph, node, end_node) else np.inf for node in neighbors])
-        
+
         weights = np.exp(-alpha * distances)
         probabilities = weights / np.sum(weights)
 
         # Choisir le prochain noeud en fonction des probabilités calculées
         next_node = random.choices(neighbors, weights=probabilities)[0]
+
+        # next_node = random.choices(neighbors)[0]        
         d = graph.get_edge_data(current_node, next_node)
         r = d[random.randint(0, (len(d)-1))]['relation']
+        if i == 0:
+            if r == relation:
+                break
         path.append(rti[r])
         current_node = next_node
         if current_node == end_node:
             trouve = True
             path.append(rti[E])
-            path += [rti[P]] * (max_length - i - 1)
+            path += [rti[P]] * (max_length - i - 3)
             break
     if not trouve:
         path = []
     return path
 
 
+
+def random_walk_networkx(graph, start_node, end_node, relation, max_length, rti=rel_to_index, S=START_TOKEN, P=PAD_TOKEN, E=END_TOKEN):
+    current_node = start_node
+    trouve = False
+    generator = nx.all_simple_paths(G, start_node, end_node, max_length-2)
+    list_path = list(generator)
+    path = random.choice(list_path)
+    for i in range(1,len(path-1)):
+        next_node = path[i]
+        d = graph.get_edge_data(current_node, next_node)
+        r = d[random.randint(0, (len(d)-1))]['relation']
+        if i == 0:
+            if r == relation:
+                break
+        path.append(rti[r])
+        current_node = next_node
+        if current_node == end_node:
+            trouve = True
+            path.append(rti[E])
+            path += [rti[P]] * (max_length - i - 3)
+            break
+    if not trouve:
+        path = []
+    return path
+
+
+
 NEG_INFTY = -1e9
 
 
+# paramètres
 d_model = 512
 batch_size = 10
 ffn_hidden = 2048
@@ -84,36 +143,38 @@ num_heads = 8
 drop_prob = 0.1
 num_layers = 1
 src_length = 1
-tgt_length = 20
-rel_vocab_size = len(relations)
-nb_paths = 3
+tgt_length = 6
+nb_paths = 1000
 
 
+
+# création des données de train
 
 rel_src = []
 rel_tgt = []
 
-for i in range(nb_paths):
-    print(i)
+i = 0
+while i < nb_paths:
     edge = random.choice(list(G.edges(data=True)))
     node1, node2, r = edge[0], edge[1], edge[2]['relation']
-    path = random_walk(G, node1, node2, tgt_length-2, 2)
+    path = random_walk_networkx(G, node1, node2, r, tgt_length)
     if not path == []:
+        print(i)
+        i = i+1
         rel_src.append([rel_to_index[r]])
         rel_tgt.append(path)
     
-
 transformer = t.Transformer(d_model, 
-                          ffn_hidden,
-                          num_heads, 
-                          drop_prob, 
-                          num_layers, 
-                          tgt_length,
-                          rel_vocab_size,
-                          rel_to_index,
-                          START_TOKEN, 
-                          END_TOKEN,
-                          PAD_TOKEN)
+                            ffn_hidden,
+                            num_heads, 
+                            drop_prob, 
+                            num_layers, 
+                            tgt_length,
+                            rel_vocab_size,
+                            rel_to_index,
+                            START_TOKEN, 
+                            END_TOKEN,
+                            PAD_TOKEN)
 
 
 
