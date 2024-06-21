@@ -5,7 +5,6 @@ import random
 import networkx as nx
 import pickle
 import os
-
     
 # Generated this by filtering Appendix code
 
@@ -13,7 +12,10 @@ START_TOKEN = '<START>'
 END_TOKEN = '<END>'
 PAD_TOKEN = '<PAD>'
 
-chemin = "FB15K-237/Data/"
+chemin = "grail-master/data/fb237_v4/"
+#chemin = "FB15K-237/Data/"
+
+
 
 
 
@@ -67,8 +69,12 @@ else:
         pickle.dump(G, f)
 
 
-# marche aléatoire qui prend deux noeuds, une relation, et qui interdit d'utiliser cette relation directement
-def random_walk(graph, start_node, end_node, relation, max_length, alpha=1.0, rti=rel_to_index, S=START_TOKEN, P=PAD_TOKEN, E=END_TOKEN):
+
+
+
+
+
+def random_walk(start_node, end_node, relation, max_length, graph=G, alpha=1.0, rti=rel_to_index, S=START_TOKEN, P=PAD_TOKEN, E=END_TOKEN):
     path = [rti[S]]
     current_node = start_node
     trouve = False
@@ -78,8 +84,14 @@ def random_walk(graph, start_node, end_node, relation, max_length, alpha=1.0, rt
         if not neighbors:
             break
         
+        def comp(a):
+            if a <= (max_length - 3 - i):
+                return 1
+            else:
+                return np.inf
+        
         # Calculer les probabilités pour choisir le prochain nœud
-        distances = np.array([nx.shortest_path_length(graph, node, end_node) if nx.has_path(graph, node, end_node) else np.inf for node in neighbors])
+        distances = np.array([comp(nx.shortest_path_length(graph, node, end_node)) if nx.has_path(graph, node, end_node) else np.inf for node in neighbors])
 
         weights = np.exp(-alpha * distances)
         probabilities = weights / np.sum(weights)
@@ -93,6 +105,8 @@ def random_walk(graph, start_node, end_node, relation, max_length, alpha=1.0, rt
         if i == 0:
             if r == relation:
                 break
+        if current_node == start_node and next_node == end_node and r == relation:
+            break
         path.append(rti[r])
         current_node = next_node
         if current_node == end_node:
@@ -103,6 +117,8 @@ def random_walk(graph, start_node, end_node, relation, max_length, alpha=1.0, rt
     if not trouve:
         path = []
     return path
+
+
 
 
 
@@ -131,7 +147,6 @@ def random_walk_networkx(graph, start_node, end_node, relation, max_length, rti=
     return path
 
 
-
 NEG_INFTY = -1e9
 
 
@@ -144,8 +159,8 @@ drop_prob = 0.1
 num_layers = 1
 src_length = 1
 tgt_length = 6
-nb_paths = 1000
-
+nb_paths = 100
+learning_rate = 0.01
 
 
 # création des données de train
@@ -157,7 +172,7 @@ i = 0
 while i < nb_paths:
     edge = random.choice(list(G.edges(data=True)))
     node1, node2, r = edge[0], edge[1], edge[2]['relation']
-    path = random_walk_networkx(G, node1, node2, r, tgt_length)
+    path = random_walk(node1, node2, r, tgt_length, alpha=2)
     if not path == []:
         print(i)
         i = i+1
@@ -220,7 +235,7 @@ for params in transformer.parameters():
     if params.dim() > 1:
         t.nn.init.xavier_uniform_(params)
 
-optim = t.torch.optim.Adam(transformer.parameters(), lr=1e-4)
+optim = t.torch.optim.Adam(transformer.parameters(), lr=learning_rate)
 device = t.torch.device('cuda')
 
 
