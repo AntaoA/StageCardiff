@@ -29,11 +29,14 @@ else:
     relations.append(END_TOKEN)
     relations.append(PAD_TOKEN)
 
+
     lines = []
 
     with open(chemin + 'list_rel.txt', 'r') as file:
         lines += file.readlines()    
     
+
+
     # Ajouter les relation et les relations inverses
     for line in lines:
         line = line.strip()
@@ -70,12 +73,8 @@ else:
 
 
 
-
-
-
-
 def random_walk(start_node, end_node, relation, max_length, graph=G, alpha=1.0, rti=rel_to_index, S=START_TOKEN, P=PAD_TOKEN, E=END_TOKEN):
-    path = [rti[S]]
+    path = [S]
     current_node = start_node
     trouve = False
     for i in range(max_length-2):
@@ -107,98 +106,101 @@ def random_walk(start_node, end_node, relation, max_length, graph=G, alpha=1.0, 
                 break
         if current_node == start_node and next_node == end_node and r == relation:
             break
-        path.append(rti[r])
+        path.append(r)
         current_node = next_node
         if current_node == end_node:
             trouve = True
-            path.append(rti[E])
-            path += [rti[P]] * (max_length - i - 3)
+            path.append(E)
+            path += [P] * (max_length - i - 3)
             break
     if not trouve:
         path = []
     return path
 
 
-
-
-
-def random_walk_networkx(graph, start_node, end_node, relation, max_length, rti=rel_to_index, S=START_TOKEN, P=PAD_TOKEN, E=END_TOKEN):
-    current_node = start_node
-    trouve = False
-    generator = nx.all_simple_paths(G, start_node, end_node, max_length-2)
-    list_path = list(generator)
-    path = random.choice(list_path)
-    for i in range(1,len(path-1)):
-        next_node = path[i]
-        d = graph.get_edge_data(current_node, next_node)
-        r = d[random.randint(0, (len(d)-1))]['relation']
-        if i == 0:
-            if r == relation:
-                break
-        path.append(rti[r])
-        current_node = next_node
-        if current_node == end_node:
-            trouve = True
-            path.append(rti[E])
-            path += [rti[P]] * (max_length - i - 3)
-            break
-    if not trouve:
-        path = []
-    return path
-
-
-NEG_INFTY = -1e9
-
-
-# paramètres
 d_model = 512
 batch_size = 10
 ffn_hidden = 2048
 num_heads = 8
 drop_prob = 0.1
 num_layers = 1
-src_length = 1
-tgt_length = 6
-nb_paths = 100
-learning_rate = 0.01
-
+len_vocab = len(rel_to_index)
+max_sequence_length = 6
+nb_paths = 3000
+learning_rate = 1e-4
 
 # création des données de train
 
-rel_src = []
-rel_tgt = []
-
-i = 0
-while i < nb_paths:
-    edge = random.choice(list(G.edges(data=True)))
-    node1, node2, r = edge[0], edge[1], edge[2]['relation']
-    path = random_walk(node1, node2, r, tgt_length, alpha=2)
-    if not path == []:
-        print(i)
-        i = i+1
-        rel_src.append([rel_to_index[r]])
-        rel_tgt.append(path)
+if os.path.exists(chemin + 'list_path.pickle'):
+    with open(chemin + 'list_path.pickle', 'rb') as f:
+        rel_src, rel_tgt = pickle.load(f)
+else:
+    rel_src = []
+    rel_tgt = []
     
+    i = 0
+    
+    while i < nb_paths:
+        edge = random.choice(list(G.edges(data=True)))
+        node1, node2, r = edge[0], edge[1], edge[2]['relation']
+        path = random_walk(node1, node2, r, 6, alpha=2)
+        if not path == []:
+            print(i)
+            i = i+1
+            rel_src.append(r)
+            rel_tgt.append(' '.join(path))
+        
+    with open(chemin + 'list_path.pickle', 'wb') as f:
+        pickle.dump((rel_src, rel_tgt), f)
+
+
+    
+NEG_INFTY = -1e9
+
+
+
+def create_masks(src_batch, tgt_batch):
+    num_sentences = len(src_batch)
+    look_ahead_mask = torch.full([max_sequence_length, max_sequence_length] , True)
+    look_ahead_mask = torch.triu(look_ahead_mask, diagonal=1)
+    encoder_padding_mask = torch.full([num_sentences, max_sequence_length, max_sequence_length] , False)
+    decoder_padding_mask_self_attention = torch.full([num_sentences, max_sequence_length, max_sequence_length] , False)
+    decoder_padding_mask_cross_attention = torch.full([num_sentences, max_sequence_length, max_sequence_length] , False)
+
+    for idx in range(num_sentences):
+      src_sentence_length, tgt_sentence_length = len(src_batch[idx]), len(tgt_batch[idx])
+      src_chars_to_padding_mask = np.arange(src_sentence_length + 1, max_sequence_length)
+      tgt_chars_to_padding_mask = np.arange(tgt_sentence_length + 1, max_sequence_length)
+      encoder_padding_mask[idx, :, src_chars_to_padding_mask] = True
+      encoder_padding_mask[idx, src_chars_to_padding_mask, :] = True
+      decoder_padding_mask_self_attention[idx, :, tgt_chars_to_padding_mask] = True
+      decoder_padding_mask_self_attention[idx, tgt_chars_to_padding_mask, :] = True
+      decoder_padding_mask_cross_attention[idx, :, src_chars_to_padding_mask] = True
+      decoder_padding_mask_cross_attention[idx, tgt_chars_to_padding_mask, :] = True
+
+    encoder_self_attention_mask = torch.where(encoder_padding_mask, NEG_INFTY, 0)
+    decoder_self_attention_mask =  torch.where(look_ahead_mask + decoder_padding_mask_self_attention, NEG_INFTY, 0)
+    decoder_cross_attention_mask = torch.where(decoder_padding_mask_cross_attention, NEG_INFTY, 0)
+    return encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask
+
+
+
 transformer = t.Transformer(d_model, 
-                            ffn_hidden,
-                            num_heads, 
-                            drop_prob, 
-                            num_layers, 
-                            tgt_length,
-                            rel_vocab_size,
-                            rel_to_index,
-                            START_TOKEN, 
-                            END_TOKEN,
-                            PAD_TOKEN)
-
-
-
-
-class TextDataset(t.Dataset):
+                          ffn_hidden,
+                          num_heads, 
+                          drop_prob, 
+                          num_layers, 
+                          max_sequence_length,
+                          len_vocab,
+                          rel_to_index,
+                          rel_to_index,
+                          START_TOKEN, 
+                          END_TOKEN, 
+                          PAD_TOKEN)    
     
-    # sert à stocker les données d'entrainement
-    # __len__ renvoie le nombre de données
-    # __getitem(i) retourne le i-ième couple ([n1, n2], chemin)
+    
+from torch.utils.data import Dataset, DataLoader
+class TextDataset(Dataset):
     
     def __init__(self, nodes_input, relation_sequences):
         self.nodes_input = nodes_input
@@ -218,25 +220,25 @@ class TextDataset(t.Dataset):
         padded_relation_sequences = [rel_seq + ['<PAD>'] * (max_rel_seq_len - len(rel_seq)) for rel_seq in relation_sequences]
 
         return nodes_input, padded_relation_sequences
-    
+        
 dataset = TextDataset(rel_src, rel_tgt)
 
-train_loader = t.DataLoader(dataset, batch_size, collate_fn = dataset.collate_fn)
+train_loader = DataLoader(dataset, batch_size)
 iterator = iter(train_loader)
 
 
+from torch import nn
 
-criterian = t.nn.CrossEntropyLoss(ignore_index=rel_to_index[PAD_TOKEN],
+criterian = nn.CrossEntropyLoss(ignore_index=rel_to_index[PAD_TOKEN],
                                 reduction='none')
 
-
-# When computing the loss, we are ignoring cases when the label is the PAD token
+# When computing the loss, we are ignoring cases when the label is the padding token
 for params in transformer.parameters():
     if params.dim() > 1:
-        t.nn.init.xavier_uniform_(params)
+        nn.init.xavier_uniform_(params)
 
-optim = t.torch.optim.Adam(transformer.parameters(), lr=learning_rate)
-device = t.torch.device('cuda')
+optim = torch.optim.Adam(transformer.parameters(), learning_rate)
+device = t.get_device()
 
 
 
@@ -246,61 +248,90 @@ total_loss = 0
 num_epochs = 10
 
 
-for epoch in range(num_epochs):
-    print(f"Epoch {epoch}")
-    iterator = iter(train_loader)
-    for batch_num, batch in enumerate(iterator):
-        transformer.train()
-        src, tgt = batch
-        src = torch.tensor(src).to(device)
-        tgt = torch.tensor(tgt).to(device)
-        src_self_attention_mask, tgt_self_attention_mask, cross_attention_mask = t.create_masks(src, tgt, src_length, tgt_length, rel_to_index[PAD_TOKEN], NEG_INFTY)
-        optim.zero_grad()
-        rel_predictions = transformer(  src,
-                                        tgt,
-                                        src_self_attention_mask.to(device), 
-                                        tgt_self_attention_mask.to(device), 
-                                        cross_attention_mask.to(device))
-        loss = criterian(
-            rel_predictions.view(-1, rel_vocab_size).to(device),
-            tgt.view(-1).to(device)
-        ).to(device)
-        valid_indicies = t.torch.where(tgt.view(-1) == rel_to_index[PAD_TOKEN], False, True)
-        loss = loss.sum() / valid_indicies.sum()
-        loss.backward()
-        optim.step()
-        #train_losses.append(loss.item())
-        if batch_num % 100 == 0:
-            print(f"Iteration {batch_num} : {loss.item()}")
-            print(f"Input: {src[0]}")
-            print(f"Output: {tgt[0]}")
-            rel_sentence_predicted = t.torch.argmax(rel_predictions[0], axis=1)
-            predicted_sentence = []
-            for idx in rel_sentence_predicted:
-              if idx == rel_to_index[END_TOKEN]:
+with open("sortie.txt", "w") as f:
+    for epoch in range(num_epochs):
+        f.write(f"\n\nEpoch {epoch}\n")
+        iterator = iter(train_loader)
+        for batch_num, batch in enumerate(iterator):
+            transformer.train()
+            src_batch, tgt_batch = batch
+            encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask = create_masks(src_batch, tgt_batch)
+            optim.zero_grad()
+            tgt_predictions = transformer(src_batch,
+                                            tgt_batch,
+                                            encoder_self_attention_mask.to(device), 
+                                            decoder_self_attention_mask.to(device), 
+                                            decoder_cross_attention_mask.to(device),
+                                            enc_start_token=False,
+                                            enc_end_token=False,
+                                            dec_start_token=False,
+                                            dec_end_token=False)
+            labels = transformer.decoder.sentence_embedding.batch_tokenize(tgt_batch, start_token=False, end_token=False)
+            loss = criterian(
+                tgt_predictions.view(-1, len_vocab).to(device),
+                labels.view(-1).to(device)
+            ).to(device)
+            valid_indicies = torch.where(labels.view(-1) == rel_to_index[PAD_TOKEN], False, True)
+            loss = loss.sum() / valid_indicies.sum()
+            loss.backward()
+            optim.step()
+            #train_losses.append(loss.item())
+            if batch_num % 100 == 0:
+                f.write(f"Iteration {batch_num} : {loss.item()}\n\n")
+                f.write(f"English: {src_batch[0]}\n")
+                f.write(f"francais Translation: {tgt_batch[0]}\n\n")
+                tgt_sentence_predicted = torch.argmax(tgt_predictions[0], axis=1)
+                predicted_sentence = ""
+                for idx in tgt_sentence_predicted:
+                    predicted_sentence += " " + index_to_rel[idx.item()]
+                    if idx == rel_to_index[END_TOKEN]:
+                        break
+                f.write(f"francais Prediction: {predicted_sentence}\n\n")
+
+
+                transformer.eval()
+                tgt_sentence = ("",)
+                src_sentence = ("/award/hall_of_fame/inductees./award/hall_of_fame_induction/inductee",)
+                for word_counter in range(max_sequence_length):
+                    encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask= create_masks(src_sentence, tgt_sentence)
+                    predictions = transformer(src_sentence,
+                                            tgt_sentence,
+                                            encoder_self_attention_mask.to(device), 
+                                            decoder_self_attention_mask.to(device),
+                                            decoder_cross_attention_mask.to(device),
+                                            enc_start_token=False,
+                                            enc_end_token=False,
+                                            dec_start_token=False,
+                                            dec_end_token=False)
+                    next_token_prob_distribution = predictions[0][word_counter] # not actual probs
+                    next_token_index = torch.argmax(next_token_prob_distribution).item()
+                    next_token = index_to_rel[next_token_index]
+                    tgt_sentence = (tgt_sentence[0] + " " + next_token, )
+                    if next_token == END_TOKEN:
+                        break
+                
+                f.write(f"Evaluation translation (/award/hall_of_fame/inductees./award/hall_of_fame_induction/inductee) : {tgt_sentence}\n")
+                f.write("-------------------------------------------\n\n")
+
+    transformer.eval()
+    def translate(src_sentence):
+        src_sentence = (src_sentence,)
+        tgt_sentence = ("",)
+        for word_counter in range(max_sequence_length):
+            encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask= create_masks(src_sentence, tgt_sentence)
+            predictions = transformer(src_sentence,
+                                    tgt_sentence,
+                                    encoder_self_attention_mask.to(device), 
+                                    decoder_self_attention_mask.to(device), 
+                                    decoder_cross_attention_mask.to(device),
+                                    enc_start_token=False,
+                                    enc_end_token=False,
+                                    dec_start_token=True,
+                                    dec_end_token=False)
+            next_token_prob_distribution = predictions[0][word_counter]
+            next_token_index = torch.argmax(next_token_prob_distribution).item()
+            next_token = rel_to_index[next_token_index]
+            tgt_sentence = (tgt_sentence[0] + next_token, )
+            if next_token == END_TOKEN:
                 break
-              predicted_sentence += [idx.item()]
-            print(f"Path: {predicted_sentence}")
-            print("-------------------------------------------")
-
-
-transformer.eval()
-def predict(num_rel):
-  src = torch.full((1, src_length), num_rel).to(device)
-  tgt = torch.full((1, tgt_length), rel_to_index[PAD_TOKEN]).to(device)
-  for i in range(tgt_length):
-    src_self_attention_mask, tgt_self_attention_mask, cross_attention_mask= t.create_masks(src, tgt,  src_length, tgt_length, rel_to_index[PAD_TOKEN], NEG_INFTY)
-    predictions = transformer(src,
-                              tgt,
-                              src_self_attention_mask.to(device), 
-                              tgt_self_attention_mask.to(device), 
-                              cross_attention_mask.to(device))
-    next_token_prob_distribution = predictions[0][i]
-    next_token = t.torch.argmax(next_token_prob_distribution).item()
-    tgt[0][i] = next_token
-    if next_token == rel_to_index[END_TOKEN]:
-      break
-  return tgt[0]
-
-print("Résultat de la prédiction")
-print(predict(24))
+        return tgt_sentence[0]
