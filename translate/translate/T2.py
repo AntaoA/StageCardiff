@@ -310,8 +310,8 @@ class Transformer(nn.Module):
     
     
     
-english_file = 'english.txt' # replace this path with appropriate one
-francais_file = 'francais.txt' # replace this path with appropriate one
+english_file = './translate/translate/english.txt' # replace this path with appropriate one
+francais_file = './translate/translate/francais.txt' # replace this path with appropriate one
 
 # Generated this by filtering Appendix code
 
@@ -359,7 +359,7 @@ with open(francais_file, 'r') as file:
     francais_sentences = file.readlines()
 
 # Limit Number of sentences
-TOTAL_SENTENCES = 200000
+TOTAL_SENTENCES = 200
 english_sentences = english_sentences[:TOTAL_SENTENCES]
 francais_sentences = francais_sentences[:TOTAL_SENTENCES]
 english_sentences = [sentence.rstrip('\n').lower() for sentence in english_sentences]
@@ -402,7 +402,7 @@ ffn_hidden = 2048
 num_heads = 8
 drop_prob = 0.1
 num_layers = 1
-max_sequence_length = 200
+max_sequence_length = 100
 fr_vocab_size = len(francais_vocabulary)
 
 transformer = Transformer(d_model, 
@@ -509,7 +509,7 @@ for epoch in range(num_epochs):
         loss.backward()
         optim.step()
         #train_losses.append(loss.item())
-        if batch_num % 100 == 0:
+        if True:#batch_num % 100 == 0:
             print(f"Iteration {batch_num} : {loss.item()}")
             print(f"English: {eng_batch[0]}")
             print(f"francais Translation: {fr_batch[0]}")

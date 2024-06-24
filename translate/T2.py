@@ -310,8 +310,8 @@ class Transformer(nn.Module):
     
     
     
-english_file = 'english.txt' # replace this path with appropriate one
-francais_file = 'francais.txt' # replace this path with appropriate one
+english_file = './translate/english.txt' # replace this path with appropriate one
+francais_file = './translate/francais.txt' # replace this path with appropriate one
 
 # Generated this by filtering Appendix code
 
