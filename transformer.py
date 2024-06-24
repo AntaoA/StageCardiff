@@ -313,25 +313,27 @@ with open("sortie.txt", "w") as f:
                 f.write(f"Evaluation translation (/award/hall_of_fame/inductees./award/hall_of_fame_induction/inductee) : {tgt_sentence}\n")
                 f.write("-------------------------------------------\n\n")
 
-    transformer.eval()
-    def translate(src_sentence):
-        src_sentence = (src_sentence,)
-        tgt_sentence = ("",)
-        for word_counter in range(max_sequence_length):
-            encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask= create_masks(src_sentence, tgt_sentence)
-            predictions = transformer(src_sentence,
-                                    tgt_sentence,
-                                    encoder_self_attention_mask.to(device), 
-                                    decoder_self_attention_mask.to(device), 
-                                    decoder_cross_attention_mask.to(device),
-                                    enc_start_token=False,
-                                    enc_end_token=False,
-                                    dec_start_token=True,
-                                    dec_end_token=False)
-            next_token_prob_distribution = predictions[0][word_counter]
-            next_token_index = torch.argmax(next_token_prob_distribution).item()
-            next_token = rel_to_index[next_token_index]
-            tgt_sentence = (tgt_sentence[0] + next_token, )
-            if next_token == END_TOKEN:
-                break
-        return tgt_sentence[0]
+
+
+transformer.eval()
+def translate(src_sentence):
+    src_sentence = (src_sentence,)
+    tgt_sentence = ("",)
+    for word_counter in range(max_sequence_length):
+        encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask= create_masks(src_sentence, tgt_sentence)
+        predictions = transformer(src_sentence,
+                                tgt_sentence,
+                                encoder_self_attention_mask.to(device), 
+                                decoder_self_attention_mask.to(device), 
+                                decoder_cross_attention_mask.to(device),
+                                enc_start_token=False,
+                                enc_end_token=False,
+                                dec_start_token=True,
+                                dec_end_token=True)
+        next_token_prob_distribution = predictions[0][word_counter]
+        next_token_index = torch.argmax(next_token_prob_distribution).item()
+        next_token = rel_to_index[next_token_index]
+        tgt_sentence = (tgt_sentence[0] + next_token, )
+        if next_token == END_TOKEN:
+            break
+    return tgt_sentence[0]
