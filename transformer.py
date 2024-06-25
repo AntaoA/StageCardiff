@@ -416,12 +416,12 @@ def multi_translate(src_sentence, k=3):
     sequences_sm = []
     sum = 0
     for _,p in sequences:
-        sum += np.exp(p)
+        sum += np.exp(10e6 * p)
     for s,p in sequences:
-        sequences_sm.append((s, np.exp(p)/sum))
+        sequences_sm.append((s, np.exp(10e6 * p)/sum))
         print("")
         print(s)
-        print(np.exp(p)/sum)
+        print(np.exp(10e6 * p)/sum)
     # If no end token was found, return the best sequence
     return sequences_sm
 
