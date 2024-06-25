@@ -180,4 +180,17 @@ Maintenant, comme l'a dit Schockaert, tout le problème est de trouver les bons 
 Je suis en train de faire de petits tests. Une question me vient à l'esprit : pour la partie induction, comment on limite à 4 la séquence ? On le force, on limite à 6 mais sans forcément de <END> auquel cas on ne le prend pas en compte ou en ne limite pas et on s'arrête que quand on aura un <END> ?\\
 Autre question : comment j'évalue si ma prédiction est bonne ?\\
 Ok j'ai des données de test spécifique, non vu à l'entrainement, mais une fois que j'ai ma prédiction comment je sais si elle est correcte ou pas ?\\
+\section*{Mardi 25-06 :}
+J'ai rajouté les relations inverse dans le graphes (comme ça accessible dans le random walk).\\
+J'ai trouvé un autre problème : comment faire pour obtenir plusieurs prédictions pour une même relation (avec degrès de confiance, ça serait pas mal) ?\\
+Potentiellement utiliser le beam search ou le top-k sampling.\\
+J'ai rajouté le multi-translate (je crois avec le beam search, plus ou moins).\\
+J'ai aussi mis en pickel le transformer carrément, ça ira beaucoup plus vite.\\
+J'ai créé le Makefile pour clean les pickels.\\
+Je crois qu'il y a un soucis dans mon implémentation. En effet, qu'importe la relation que j'évalue en imput, j'obtiens la même prédiction, en quand je regarde les 10 première prédictions, elles sont toute équivalente, ce qui n'est pas censé être le cas.\\
+Je pense que ça fait de l'entraînement, je ne saurais pas exactement dire quoi mais c'est ce que je pense.\\
+Vendredi dernier on avait parler de l'entré comme une séquence avec SOURCE | séparateur | DÉBUT DE PRÉDICTION.\\
+Je crois que je n'ai pas bien implémenté, et je regarde dans spécifiquement les transformer pour de la prédiction mot à mot. Ça devrait être mieux je l'espère, car j'ai assez perdu de temps là.\\
+OK journée pas hyper productive, la fatigue n'a pas aidé.\\
+Il faudra faire mieux demain.\\
 \end{document}
