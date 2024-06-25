@@ -74,7 +74,7 @@ class SentenceEmbedding(nn.Module):
         return tokenized.to(get_device())
     
     def forward(self, x, start_token, end_token): # sentence
-        
+
         x_token = self.batch_tokenize(x, start_token, end_token)
         x_emb = self.embedding(x_token)
         pos = self.position_encoder().to(get_device())

@@ -60,7 +60,7 @@ if os.path.exists(chemin + 'graphe_train.pickle'):
     with open(chemin + 'graphe_train.pickle', 'rb') as f:
         G = pickle.load(f)
 else:
-    G = nx.MultiDiGraph()
+    G = nx.MultiGraph()
     # Ajout des noeuds et des arêtes au graphe    
     with open(chemin + 'train.txt', 'r') as file:
         for line in file:
@@ -68,18 +68,26 @@ else:
             G.add_node(n1)
             G.add_node(n2)
             G.add_edge(n1, n2, relation = r)
+            G.add_edge(n2, n1, relation = r + '-1')
     with open(chemin + 'graphe_train.pickle', 'wb') as f:
         pickle.dump(G, f)
 
 
 
+def inv(relation):
+    if relation[-2:] == '-1':
+        return relation[:-2]
+    else:
+        return relation + '-1'
+
 def random_walk(start_node, end_node, relation, max_length, graph=G, alpha=1.0, rti=rel_to_index, S=START_TOKEN, P=PAD_TOKEN, E=END_TOKEN):
     path = [S]
     current_node = start_node
     trouve = False
+    last_r = relation
+    last_n = end_node
     for i in range(max_length-2):
-        neighbors = list(graph.successors(current_node))
-
+        neighbors = list(graph.neighbors(current_node))
         if not neighbors:
             break
         
@@ -97,10 +105,15 @@ def random_walk(start_node, end_node, relation, max_length, graph=G, alpha=1.0, 
 
         # Choisir le prochain noeud en fonction des probabilités calculées
         next_node = random.choices(neighbors, weights=probabilities)[0]
-
+        
         # next_node = random.choices(neighbors)[0]        
         d = graph.get_edge_data(current_node, next_node)
         r = d[random.randint(0, (len(d)-1))]['relation']
+        
+        if r == inv(last_r) and next_node == last_n:
+            break
+        last_r = r
+        last_n = current_node
         if i == 0:
             if r == relation:
                 break
@@ -126,8 +139,12 @@ drop_prob = 0.1
 num_layers = 1
 len_vocab = len(rel_to_index)
 max_sequence_length = 6
-nb_paths = 3000
+nb_paths = 1000
 learning_rate = 1e-4
+
+device = t.get_device()
+
+
 
 # création des données de train
 
@@ -185,155 +202,228 @@ def create_masks(src_batch, tgt_batch):
 
 
 
-transformer = t.Transformer(d_model, 
-                          ffn_hidden,
-                          num_heads, 
-                          drop_prob, 
-                          num_layers, 
-                          max_sequence_length,
-                          len_vocab,
-                          rel_to_index,
-                          rel_to_index,
-                          START_TOKEN, 
-                          END_TOKEN, 
-                          PAD_TOKEN)    
-    
-    
-from torch.utils.data import Dataset, DataLoader
-class TextDataset(Dataset):
-    
-    def __init__(self, nodes_input, relation_sequences):
-        self.nodes_input = nodes_input
-        self.relation_sequences = relation_sequences
 
-    def __len__(self):
-        return len(self.nodes_input)
 
-    def __getitem__(self, idx):
-        return self.nodes_input[idx], self.relation_sequences[idx]
-    
-    def collate_fn(self, batch):
-        nodes_input, relation_sequences = zip(*batch)
+if os.path.exists('transformer.pickle'):
+    with open('transformer.pickle', 'rb') as f:
+        transformer = pickle.load(f)
+else:
 
-        # Remplir relation_sequences pour assurer une taille constante
-        max_rel_seq_len = max(len(rel_seq) for rel_seq in relation_sequences)
-        padded_relation_sequences = [rel_seq + ['<PAD>'] * (max_rel_seq_len - len(rel_seq)) for rel_seq in relation_sequences]
-
-        return nodes_input, padded_relation_sequences
+    transformer = t.Transformer(d_model, 
+                            ffn_hidden,
+                            num_heads, 
+                            drop_prob, 
+                            num_layers, 
+                            max_sequence_length,
+                            len_vocab,
+                            rel_to_index,
+                            rel_to_index,
+                            START_TOKEN, 
+                            END_TOKEN, 
+                            PAD_TOKEN)    
         
-dataset = TextDataset(rel_src, rel_tgt)
+        
+    from torch.utils.data import Dataset, DataLoader
+    class TextDataset(Dataset):
+        
+        def __init__(self, nodes_input, relation_sequences):
+            self.nodes_input = nodes_input
+            self.relation_sequences = relation_sequences
 
-train_loader = DataLoader(dataset, batch_size)
-iterator = iter(train_loader)
+        def __len__(self):
+            return len(self.nodes_input)
 
+        def __getitem__(self, idx):
+            return self.nodes_input[idx], self.relation_sequences[idx]
+        
+        def collate_fn(self, batch):
+            nodes_input, relation_sequences = zip(*batch)
 
-from torch import nn
+            # Remplir relation_sequences pour assurer une taille constante
+            max_rel_seq_len = max(len(rel_seq) for rel_seq in relation_sequences)
+            padded_relation_sequences = [rel_seq + ['<PAD>'] * (max_rel_seq_len - len(rel_seq)) for rel_seq in relation_sequences]
 
-criterian = nn.CrossEntropyLoss(ignore_index=rel_to_index[PAD_TOKEN],
-                                reduction='none')
+            return nodes_input, padded_relation_sequences
+            
+    dataset = TextDataset(rel_src, rel_tgt)
 
-# When computing the loss, we are ignoring cases when the label is the padding token
-for params in transformer.parameters():
-    if params.dim() > 1:
-        nn.init.xavier_uniform_(params)
-
-optim = torch.optim.Adam(transformer.parameters(), learning_rate)
-device = t.get_device()
-
-
-
-transformer.train()
-transformer.to(device)
-total_loss = 0
-num_epochs = 10
-
-
-with open("sortie.txt", "w") as f:
-    for epoch in range(num_epochs):
-        f.write(f"\n\nEpoch {epoch}\n")
-        iterator = iter(train_loader)
-        for batch_num, batch in enumerate(iterator):
-            transformer.train()
-            src_batch, tgt_batch = batch
-            encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask = create_masks(src_batch, tgt_batch)
-            optim.zero_grad()
-            tgt_predictions = transformer(src_batch,
-                                            tgt_batch,
-                                            encoder_self_attention_mask.to(device), 
-                                            decoder_self_attention_mask.to(device), 
-                                            decoder_cross_attention_mask.to(device),
-                                            enc_start_token=False,
-                                            enc_end_token=False,
-                                            dec_start_token=False,
-                                            dec_end_token=False)
-            labels = transformer.decoder.sentence_embedding.batch_tokenize(tgt_batch, start_token=False, end_token=False)
-            loss = criterian(
-                tgt_predictions.view(-1, len_vocab).to(device),
-                labels.view(-1).to(device)
-            ).to(device)
-            valid_indicies = torch.where(labels.view(-1) == rel_to_index[PAD_TOKEN], False, True)
-            loss = loss.sum() / valid_indicies.sum()
-            loss.backward()
-            optim.step()
-            #train_losses.append(loss.item())
-            if batch_num % 100 == 0:
-                f.write(f"Iteration {batch_num} : {loss.item()}\n\n")
-                f.write(f"English: {src_batch[0]}\n")
-                f.write(f"francais Translation: {tgt_batch[0]}\n\n")
-                tgt_sentence_predicted = torch.argmax(tgt_predictions[0], axis=1)
-                predicted_sentence = ""
-                for idx in tgt_sentence_predicted:
-                    predicted_sentence += " " + index_to_rel[idx.item()]
-                    if idx == rel_to_index[END_TOKEN]:
-                        break
-                f.write(f"francais Prediction: {predicted_sentence}\n\n")
+    train_loader = DataLoader(dataset, batch_size)
+    iterator = iter(train_loader)
 
 
-                transformer.eval()
-                tgt_sentence = ("",)
-                src_sentence = ("/award/hall_of_fame/inductees./award/hall_of_fame_induction/inductee",)
-                for word_counter in range(max_sequence_length):
-                    encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask= create_masks(src_sentence, tgt_sentence)
-                    predictions = transformer(src_sentence,
-                                            tgt_sentence,
-                                            encoder_self_attention_mask.to(device), 
-                                            decoder_self_attention_mask.to(device),
-                                            decoder_cross_attention_mask.to(device),
-                                            enc_start_token=False,
-                                            enc_end_token=False,
-                                            dec_start_token=False,
-                                            dec_end_token=False)
-                    next_token_prob_distribution = predictions[0][word_counter] # not actual probs
-                    next_token_index = torch.argmax(next_token_prob_distribution).item()
-                    next_token = index_to_rel[next_token_index]
-                    tgt_sentence = (tgt_sentence[0] + " " + next_token, )
-                    if next_token == END_TOKEN:
-                        break
-                
-                f.write(f"Evaluation translation (/award/hall_of_fame/inductees./award/hall_of_fame_induction/inductee) : {tgt_sentence}\n")
-                f.write("-------------------------------------------\n\n")
+    from torch import nn
+
+    criterian = nn.CrossEntropyLoss(ignore_index=rel_to_index[PAD_TOKEN],
+                                    reduction='none')
+
+    # When computing the loss, we are ignoring cases when the label is the padding token
+    for params in transformer.parameters():
+        if params.dim() > 1:
+            nn.init.xavier_uniform_(params)
+
+    optim = torch.optim.Adam(transformer.parameters(), learning_rate)
 
 
 
-transformer.eval()
+    transformer.train()
+    transformer.to(device)
+    total_loss = 0
+    num_epochs = 10
+
+
+    with open("sortie.txt", "w") as f:
+        for epoch in range(num_epochs):
+            f.write(f"\n\nEpoch {epoch}\n")
+            iterator = iter(train_loader)
+            for batch_num, batch in enumerate(iterator):
+                transformer.train()
+                src_batch, tgt_batch = batch
+                encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask = create_masks(src_batch, tgt_batch)
+                optim.zero_grad()
+                tgt_predictions = transformer(src_batch,
+                                                tgt_batch,
+                                                encoder_self_attention_mask.to(device), 
+                                                decoder_self_attention_mask.to(device), 
+                                                decoder_cross_attention_mask.to(device),
+                                                enc_start_token=False,
+                                                enc_end_token=False,
+                                                dec_start_token=False,
+                                                dec_end_token=False)
+                labels = transformer.decoder.sentence_embedding.batch_tokenize(tgt_batch, start_token=False, end_token=False)
+                loss = criterian(
+                    tgt_predictions.view(-1, len_vocab).to(device),
+                    labels.view(-1).to(device)
+                ).to(device)
+                valid_indicies = torch.where(labels.view(-1) == rel_to_index[PAD_TOKEN], False, True)
+                loss = loss.sum() / valid_indicies.sum()
+                loss.backward()
+                optim.step()
+                #train_losses.append(loss.item())
+                if batch_num % 1 == 0:
+                    f.write(f"Iteration {batch_num} : {loss.item()}\n\n")
+                    f.write(f"English: {src_batch[0]}\n")
+                    f.write(f"francais Translation: {tgt_batch[0]}\n\n")
+                    tgt_sentence_predicted = torch.argmax(tgt_predictions[0], axis=1)
+                    predicted_sentence = ""
+                    for idx in tgt_sentence_predicted:
+                        predicted_sentence += " " + index_to_rel[idx.item()]
+                        if idx == rel_to_index[END_TOKEN]:
+                            break
+                    f.write(f"francais Prediction: {predicted_sentence}\n\n")
+
+
+                    transformer.eval()
+                    tgt_sentence = ("",)
+                    src_sentence = ("/award/hall_of_fame/inductees./award/hall_of_fame_induction/inductee",)
+                    for word_counter in range(max_sequence_length):
+                        encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask= create_masks(src_sentence, tgt_sentence)
+                        predictions = transformer(src_sentence,
+                                                tgt_sentence,
+                                                encoder_self_attention_mask.to(device), 
+                                                decoder_self_attention_mask.to(device),
+                                                decoder_cross_attention_mask.to(device),
+                                                enc_start_token=False,
+                                                enc_end_token=False,
+                                                dec_start_token=False,
+                                                dec_end_token=False)
+                        next_token_prob_distribution = predictions[0][word_counter] # not actual probs
+                        next_token_index = torch.argmax(next_token_prob_distribution).item()
+                        next_token = index_to_rel[next_token_index]
+                        tgt_sentence = (tgt_sentence[0] + " " + next_token, )
+                        if next_token == END_TOKEN:
+                            break
+                    
+                    f.write(f"Evaluation translation (/award/hall_of_fame/inductees./award/hall_of_fame_induction/inductee) : {tgt_sentence}\n")
+                    f.write("-------------------------------------------\n\n")
+
+
+    with open('transformer.pickle', 'wb') as f:
+        pickle.dump(transformer, f)
+
+
+
+
 def translate(src_sentence):
-    src_sentence = (src_sentence,)
-    tgt_sentence = ("",)
+    transformer.eval()
+    tgt = ("",)
+    src= (src_sentence,)
     for word_counter in range(max_sequence_length):
-        encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask= create_masks(src_sentence, tgt_sentence)
-        predictions = transformer(src_sentence,
-                                tgt_sentence,
+        encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask= create_masks(src, tgt)
+        predictions = transformer(src,
+                                tgt,
                                 encoder_self_attention_mask.to(device), 
-                                decoder_self_attention_mask.to(device), 
+                                decoder_self_attention_mask.to(device),
                                 decoder_cross_attention_mask.to(device),
                                 enc_start_token=False,
                                 enc_end_token=False,
-                                dec_start_token=True,
-                                dec_end_token=True)
-        next_token_prob_distribution = predictions[0][word_counter]
+                                dec_start_token=False,
+                                dec_end_token=False)
+        next_token_prob_distribution = predictions[0][word_counter] # not actual probs
         next_token_index = torch.argmax(next_token_prob_distribution).item()
-        next_token = rel_to_index[next_token_index]
-        tgt_sentence = (tgt_sentence[0] + next_token, )
+        next_token = index_to_rel[next_token_index]
+        tgt = (tgt[0] + " " + next_token, )
         if next_token == END_TOKEN:
             break
-    return tgt_sentence[0]
+    return tgt[0]
+
+print("")
+print(translate("/film/actor/film./film/performance/film"))
+print("")
+print(translate("/film/film/release_date_s./film/film_regional_release_date/film_release_region"))
+print("")
+
+
+
+def multi_translate(src_sentence, k=3):
+    transformer.eval()
+    src = (src_sentence,)
+    sequences = [("", 1.0)]  # list of tuples (sequence, probability)
+
+    for word_counter in range(max_sequence_length):
+        all_candidates = []
+        
+        for seq, score in sequences:
+            tgt = (seq,)
+            encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask = create_masks(src, tgt)
+            
+            predictions = transformer(src,
+                                      tgt,
+                                      encoder_self_attention_mask.to(device),
+                                      decoder_self_attention_mask.to(device),
+                                      decoder_cross_attention_mask.to(device),
+                                      enc_start_token=False,
+                                      enc_end_token=False,
+                                      dec_start_token=False,
+                                      dec_end_token=False)
+            
+            next_token_prob_distribution = predictions[0][word_counter]  # log probabilities
+            next_token_prob_distribution = torch.nn.functional.softmax(next_token_prob_distribution, dim=-1)
+            
+            topk_probs, topk_indices = torch.topk(next_token_prob_distribution, k)
+            
+            for i in range(k):
+                next_token_index = topk_indices[i].item()
+                next_token_prob = topk_probs[i].item()
+                next_token = index_to_rel[next_token_index]
+                candidate = (seq + " " + next_token, score * next_token_prob)
+                                
+                all_candidates.append(candidate)
+
+        # Order all candidates by their probability scores
+        ordered = sorted(all_candidates, key=lambda x: x[1], reverse=True)
+        # Select the k best candidates
+        sequences = ordered[:k]
+    sequences_sm = []
+    sum = 0
+    for _,p in sequences:
+        sum += np.exp(p)
+    for s,p in sequences:
+        sequences_sm.append((s, np.exp(p)/sum))
+        print("")
+        print(s)
+        print(np.exp(p)/sum)
+    # If no end token was found, return the best sequence
+    return sequences_sm
+
+# Example usage
+sequences = multi_translate("/award/award_nominee/award_nominations./award/award_nomination/award_nominee", k=10)
