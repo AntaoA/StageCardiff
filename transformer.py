@@ -1,34 +1,32 @@
-import module_transformer as t
 import torch
-import numpy as np
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader
+import os
 import random
 import networkx as nx
 import pickle
-import os
-    
-# Generated this by filtering Appendix code
-
-START_TOKEN = '<START>'
-END_TOKEN = '<END>'
-PAD_TOKEN = '<PAD>'
+import numpy as np
+import module_transformer as t
+from module_transformer import START_TOKEN, END_TOKEN, PAD_TOKEN, SEP_TOKEN, SEQUENCE_LENGTH
 
 chemin = "grail-master/data/fb237_v4/"
-#chemin = "FB15K-237/Data/"
 
+nb_paths = 1000
 
-
-
+# Dataset Preparation
 
 if os.path.exists(chemin + 'index.pickle'):
     with open(chemin + 'index.pickle', 'rb') as f:
-        index_to_rel, rel_to_index, rel_vocab_size = pickle.load(f)
+        int_to_rel, rel_to_int, rel_vocab = pickle.load(f)
 else:
-    relations = []
+    rel_vocab = []
 
-    relations.append(START_TOKEN)
-    relations.append(END_TOKEN)
-    relations.append(PAD_TOKEN)
-
+    rel_vocab.append(START_TOKEN)
+    rel_vocab.append(END_TOKEN)
+    rel_vocab.append(PAD_TOKEN)
+    rel_vocab.append(SEP_TOKEN)
 
     lines = []
 
@@ -40,21 +38,16 @@ else:
     # Ajouter les relation et les relations inverses
     for line in lines:
         line = line.strip()
-        relations.append(line)
-        relations.append(line + '-1')
+        rel_vocab.append(line)
+        rel_vocab.append(line + '_input')
+        rel_vocab.append(line + '-1')
+        rel_vocab.append(line + '-1_input')
 
-    
-    rel_vocab_size = len(relations)
-
-    index_to_rel = {k:v.strip() for k,v in enumerate(relations)}
-    rel_to_index = {v.strip():k for k,v in enumerate(relations)}
-
+    int_to_rel = {k:v.strip() for k,v in enumerate(rel_vocab)}
+    rel_to_int = {v.strip():k for k,v in enumerate(rel_vocab)}
 
     with open(chemin + 'index.pickle', 'wb') as f:
-        pickle.dump((index_to_rel, rel_to_index, len(relations)), f)
-
-
-
+        pickle.dump((int_to_rel, rel_to_int, rel_vocab), f)
 
 if os.path.exists(chemin + 'graphe_train.pickle'):
     with open(chemin + 'graphe_train.pickle', 'rb') as f:
@@ -72,15 +65,14 @@ else:
     with open(chemin + 'graphe_train.pickle', 'wb') as f:
         pickle.dump(G, f)
 
-
-
 def inv(relation):
     if relation[-2:] == '-1':
         return relation[:-2]
     else:
         return relation + '-1'
 
-def random_walk(start_node, end_node, relation, max_length, graph=G, alpha=1.0, rti=rel_to_index, S=START_TOKEN, P=PAD_TOKEN, E=END_TOKEN):
+
+def random_walk(start_node, end_node, relation, max_length, graph, alpha, S=START_TOKEN, P=PAD_TOKEN, E=END_TOKEN):
     path = [S]
     current_node = start_node
     trouve = False
@@ -130,27 +122,9 @@ def random_walk(start_node, end_node, relation, max_length, graph=G, alpha=1.0, 
         path = []
     return path
 
-
-d_model = 512
-batch_size = 10
-ffn_hidden = 2048
-num_heads = 8
-drop_prob = 0.1
-num_layers = 1
-len_vocab = len(rel_to_index)
-max_sequence_length = 6
-nb_paths = 1000
-learning_rate = 1e-4
-
-device = t.get_device()
-
-
-
-# création des données de train
-
 if os.path.exists(chemin + 'list_path.pickle'):
     with open(chemin + 'list_path.pickle', 'rb') as f:
-        rel_src, rel_tgt = pickle.load(f)
+        samples = pickle.load(f)
 else:
     rel_src = []
     rel_tgt = []
@@ -160,270 +134,174 @@ else:
     while i < nb_paths:
         edge = random.choice(list(G.edges(data=True)))
         node1, node2, r = edge[0], edge[1], edge[2]['relation']
-        path = random_walk(node1, node2, r, 6, alpha=2)
+        path = random_walk(node1, node2, r, 6, G, 2)
         if not path == []:
             print(i)
             i = i+1
-            rel_src.append(r)
+            rel_src.append(r + '_input')
             rel_tgt.append(' '.join(path))
         
-    with open(chemin + 'list_path.pickle', 'wb') as f:
-        pickle.dump((rel_src, rel_tgt), f)
-
-
+        
+    samples = [[r1, SEP_TOKEN] + r2.split(' ') for r1, r2 in zip(rel_src, rel_tgt)]
     
-NEG_INFTY = -1e9
+    with open(chemin + 'list_path.pickle', 'wb') as f:
+        pickle.dump(samples, f)
 
 
+rel_vocab_size = len(rel_vocab)
 
-def create_masks(src_batch, tgt_batch):
-    num_sentences = len(src_batch)
-    look_ahead_mask = torch.full([max_sequence_length, max_sequence_length] , True)
-    look_ahead_mask = torch.triu(look_ahead_mask, diagonal=1)
-    encoder_padding_mask = torch.full([num_sentences, max_sequence_length, max_sequence_length] , False)
-    decoder_padding_mask_self_attention = torch.full([num_sentences, max_sequence_length, max_sequence_length] , False)
-    decoder_padding_mask_cross_attention = torch.full([num_sentences, max_sequence_length, max_sequence_length] , False)
+with open ("quelques_relations.txt", "w") as f:
+    for r in rel_vocab:
+        if r[-6:] == "_input":
+            count = 0
+            count = sum(1 for i in samples if r == i[0])
+            f.write(f"{r}\n{count}\n\n")
 
-    for idx in range(num_sentences):
-      src_sentence_length, tgt_sentence_length = len(src_batch[idx]), len(tgt_batch[idx])
-      src_chars_to_padding_mask = np.arange(src_sentence_length + 1, max_sequence_length)
-      tgt_chars_to_padding_mask = np.arange(tgt_sentence_length + 1, max_sequence_length)
-      encoder_padding_mask[idx, :, src_chars_to_padding_mask] = True
-      encoder_padding_mask[idx, src_chars_to_padding_mask, :] = True
-      decoder_padding_mask_self_attention[idx, :, tgt_chars_to_padding_mask] = True
-      decoder_padding_mask_self_attention[idx, tgt_chars_to_padding_mask, :] = True
-      decoder_padding_mask_cross_attention[idx, :, src_chars_to_padding_mask] = True
-      decoder_padding_mask_cross_attention[idx, tgt_chars_to_padding_mask, :] = True
+BATCH_SIZE = 32
 
-    encoder_self_attention_mask = torch.where(encoder_padding_mask, NEG_INFTY, 0)
-    decoder_self_attention_mask =  torch.where(look_ahead_mask + decoder_padding_mask_self_attention, NEG_INFTY, 0)
-    decoder_cross_attention_mask = torch.where(decoder_padding_mask_cross_attention, NEG_INFTY, 0)
-    return encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask
+dataset = t.TextDataset(samples, rel_to_int)
+dataloader = DataLoader(
+    dataset, 
+    batch_size=BATCH_SIZE, 
+    shuffle=True, 
+)
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
+# Training
+def train(model, epochs, dataloader, criterion, optimizer):
+    model.train()
+    for epoch in range(epochs):
+        running_loss = 0
+        for input_seq, target_seq, padding_mask in dataloader:
+            input_seq, target_seq, padding_mask = input_seq.to(device), target_seq.to(device), padding_mask.to(device)
+            
+            outputs = model(input_seq)
+            target_seq = target_seq.contiguous().view(-1)
+            outputs = outputs.view(-1, rel_vocab_size)
+            
+            active_loss = padding_mask.view(-1) == 1
+            active_logits = outputs.view(-1, rel_vocab_size)[active_loss]
+            active_labels = target_seq.view(-1)[active_loss]
+            
+            loss = criterion(active_logits, active_labels)
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.detach().cpu().numpy()
+            
+        epoch_loss = running_loss / len(dataloader)
+        print(f"Epoch {epoch} loss: {epoch_loss:.3f}")
+
+epochs = 100
+learning_rate = 0.001 
+embed_dim=100
+num_layers=2 
+num_heads=2
 
 
 
 if os.path.exists('transformer.pickle'):
     with open('transformer.pickle', 'rb') as f:
-        transformer = pickle.load(f)
+        model = pickle.load(f)
 else:
+    model = t.TextGen(
+        vocab_size=rel_vocab_size, 
+        embed_dim=100,
+        num_layers=2, 
+        num_heads=2,
+    ).to(device)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    print(model)
+    # Total parameters and trainable parameters.
+    total_params = sum(p.numel() for p in model.parameters())
+    print(f"{total_params:,} total parameters.")
+    total_trainable_params = sum(
+        p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"{total_trainable_params:,} training parameters.\n")
 
-    transformer = t.Transformer(d_model, 
-                            ffn_hidden,
-                            num_heads, 
-                            drop_prob, 
-                            num_layers, 
-                            max_sequence_length,
-                            len_vocab,
-                            rel_to_index,
-                            rel_to_index,
-                            START_TOKEN, 
-                            END_TOKEN, 
-                            PAD_TOKEN)    
-        
-        
-    from torch.utils.data import Dataset, DataLoader
-    class TextDataset(Dataset):
-        
-        def __init__(self, nodes_input, relation_sequences):
-            self.nodes_input = nodes_input
-            self.relation_sequences = relation_sequences
+    train(model, epochs, dataloader, criterion, optimizer) 
+    open('transformer.pickle', 'wb').write(pickle.dumps(model))
 
-        def __len__(self):
-            return len(self.nodes_input)
+def return_int_vector(text):
+    words = text.split()
+    input_seq = torch.LongTensor([rel_to_int[word] for word in words[-t.SEQUENCE_LENGTH:]]).unsqueeze(0)
+    return input_seq
 
-        def __getitem__(self, idx):
-            return self.nodes_input[idx], self.relation_sequences[idx]
-        
-        def collate_fn(self, batch):
-            nodes_input, relation_sequences = zip(*batch)
+def sample_next(predictions, k):
+    probabilities = F.softmax(predictions[:, -1, :], dim=-1).cpu()
+    topk_probs, topk_indices = torch.topk(probabilities, k)
+    return topk_probs[0], topk_indices[0]
 
-            # Remplir relation_sequences pour assurer une taille constante
-            max_rel_seq_len = max(len(rel_seq) for rel_seq in relation_sequences)
-            padded_relation_sequences = [rel_seq + ['<PAD>'] * (max_rel_seq_len - len(rel_seq)) for rel_seq in relation_sequences]
-
-            return nodes_input, padded_relation_sequences
-            
-    dataset = TextDataset(rel_src, rel_tgt)
-
-    train_loader = DataLoader(dataset, batch_size)
-    iterator = iter(train_loader)
-
-
-    from torch import nn
-
-    criterian = nn.CrossEntropyLoss(ignore_index=rel_to_index[PAD_TOKEN],
-                                    reduction='none')
-
-    # When computing the loss, we are ignoring cases when the label is the padding token
-    for params in transformer.parameters():
-        if params.dim() > 1:
-            nn.init.xavier_uniform_(params)
-
-    optim = torch.optim.Adam(transformer.parameters(), learning_rate)
-
-
-
-    transformer.train()
-    transformer.to(device)
-    total_loss = 0
-    num_epochs = 10
-
-
-    with open("sortie.txt", "w") as f:
-        for epoch in range(num_epochs):
-            f.write(f"\n\nEpoch {epoch}\n")
-            iterator = iter(train_loader)
-            for batch_num, batch in enumerate(iterator):
-                transformer.train()
-                src_batch, tgt_batch = batch
-                encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask = create_masks(src_batch, tgt_batch)
-                optim.zero_grad()
-                tgt_predictions = transformer(src_batch,
-                                                tgt_batch,
-                                                encoder_self_attention_mask.to(device), 
-                                                decoder_self_attention_mask.to(device), 
-                                                decoder_cross_attention_mask.to(device),
-                                                enc_start_token=False,
-                                                enc_end_token=False,
-                                                dec_start_token=False,
-                                                dec_end_token=False)
-                labels = transformer.decoder.sentence_embedding.batch_tokenize(tgt_batch, start_token=False, end_token=False)
-                loss = criterian(
-                    tgt_predictions.view(-1, len_vocab).to(device),
-                    labels.view(-1).to(device)
-                ).to(device)
-                valid_indicies = torch.where(labels.view(-1) == rel_to_index[PAD_TOKEN], False, True)
-                loss = loss.sum() / valid_indicies.sum()
-                loss.backward()
-                optim.step()
-                #train_losses.append(loss.item())
-                if batch_num % 1 == 0:
-                    f.write(f"Iteration {batch_num} : {loss.item()}\n\n")
-                    f.write(f"English: {src_batch[0]}\n")
-                    f.write(f"francais Translation: {tgt_batch[0]}\n\n")
-                    tgt_sentence_predicted = torch.argmax(tgt_predictions[0], axis=1)
-                    predicted_sentence = ""
-                    for idx in tgt_sentence_predicted:
-                        predicted_sentence += " " + index_to_rel[idx.item()]
-                        if idx == rel_to_index[END_TOKEN]:
-                            break
-                    f.write(f"francais Prediction: {predicted_sentence}\n\n")
-
-
-                    transformer.eval()
-                    tgt_sentence = ("",)
-                    src_sentence = ("/award/hall_of_fame/inductees./award/hall_of_fame_induction/inductee",)
-                    for word_counter in range(max_sequence_length):
-                        encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask= create_masks(src_sentence, tgt_sentence)
-                        predictions = transformer(src_sentence,
-                                                tgt_sentence,
-                                                encoder_self_attention_mask.to(device), 
-                                                decoder_self_attention_mask.to(device),
-                                                decoder_cross_attention_mask.to(device),
-                                                enc_start_token=False,
-                                                enc_end_token=False,
-                                                dec_start_token=False,
-                                                dec_end_token=False)
-                        next_token_prob_distribution = predictions[0][word_counter] # not actual probs
-                        next_token_index = torch.argmax(next_token_prob_distribution).item()
-                        next_token = index_to_rel[next_token_index]
-                        tgt_sentence = (tgt_sentence[0] + " " + next_token, )
-                        if next_token == END_TOKEN:
-                            break
-                    
-                    f.write(f"Evaluation translation (/award/hall_of_fame/inductees./award/hall_of_fame_induction/inductee) : {tgt_sentence}\n")
-                    f.write("-------------------------------------------\n\n")
-
-
-    with open('transformer.pickle', 'wb') as f:
-        pickle.dump(transformer, f)
-
-
-
-
-def translate(src_sentence):
-    transformer.eval()
-    tgt = ("",)
-    src= (src_sentence,)
-    for word_counter in range(max_sequence_length):
-        encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask= create_masks(src, tgt)
-        predictions = transformer(src,
-                                tgt,
-                                encoder_self_attention_mask.to(device), 
-                                decoder_self_attention_mask.to(device),
-                                decoder_cross_attention_mask.to(device),
-                                enc_start_token=False,
-                                enc_end_token=False,
-                                dec_start_token=False,
-                                dec_end_token=False)
-        next_token_prob_distribution = predictions[0][word_counter] # not actual probs
-        next_token_index = torch.argmax(next_token_prob_distribution).item()
-        next_token = index_to_rel[next_token_index]
-        tgt = (tgt[0] + " " + next_token, )
-        if next_token == END_TOKEN:
+def text_generator(sentence, generate_length):
+    model.eval()
+    sample = sentence
+    for i in range(generate_length):
+        int_vector = return_int_vector(sample)
+        if len(int_vector) >= SEQUENCE_LENGTH - 1:
             break
-    return tgt[0]
-
-print("")
-print(translate("/film/actor/film./film/performance/film"))
-print("")
-print(translate("/film/film/release_date_s./film/film_regional_release_date/film_release_region"))
-print("")
-
-
-
-def multi_translate(src_sentence, k=3):
-    transformer.eval()
-    src = (src_sentence,)
-    sequences = [("", 1.0)]  # list of tuples (sequence, probability)
-
-    for word_counter in range(max_sequence_length):
+        input_tensor = int_vector.to(device)
+        with torch.no_grad():
+            predictions = model(input_tensor)
+        next_token = sample_next(predictions, 1)
+        sample += ' ' + int_to_rel[next_token]
+        if next_token == rel_to_int[END_TOKEN]:
+            break
+    print(sample)
+    print('\n')
+    
+    
+def text_generator_with_confidence(sentence, generate_length, k):
+    model.eval()
+    samples = [(" ".join(sentence.split()), 1.0, [])]        
+    for _ in range(generate_length):
         all_candidates = []
-        
-        for seq, score in sequences:
-            tgt = (seq,)
-            encoder_self_attention_mask, decoder_self_attention_mask, decoder_cross_attention_mask = create_masks(src, tgt)
+        for seq, score, list_prob in samples:
+            if seq[-5:] == END_TOKEN:
+                all_candidates.append((seq, score, list_prob))
+                continue
+            int_vector = return_int_vector(seq).to(device)
+
+            if len(int_vector) >= SEQUENCE_LENGTH - 1:
+                break
+
+            with torch.no_grad():
+                predictions = model(int_vector)
+                
             
-            predictions = transformer(src,
-                                      tgt,
-                                      encoder_self_attention_mask.to(device),
-                                      decoder_self_attention_mask.to(device),
-                                      decoder_cross_attention_mask.to(device),
-                                      enc_start_token=False,
-                                      enc_end_token=False,
-                                      dec_start_token=False,
-                                      dec_end_token=False)
+            topk_probs, topk_indices = sample_next(predictions, k)
             
-            next_token_prob_distribution = predictions[0][word_counter]  # log probabilities
-            next_token_prob_distribution = torch.nn.functional.softmax(next_token_prob_distribution, dim=-1)
-            
-            topk_probs, topk_indices = torch.topk(next_token_prob_distribution, k)
             
             for i in range(k):
                 next_token_index = topk_indices[i].item()
                 next_token_prob = topk_probs[i].item()
-                next_token = index_to_rel[next_token_index]
-                candidate = (seq + " " + next_token, score * next_token_prob)
-                                
+                next_token = int_to_rel[next_token_index]
+                candidate = (seq + " " + next_token, score * next_token_prob, list_prob + [next_token_prob])                                
                 all_candidates.append(candidate)
-
+            
         # Order all candidates by their probability scores
         ordered = sorted(all_candidates, key=lambda x: x[1], reverse=True)
         # Select the k best candidates
-        sequences = ordered[:k]
-    sequences_sm = []
-    sum = 0
-    for _,p in sequences:
-        sum += np.exp(10e6 * p)
-    for s,p in sequences:
-        sequences_sm.append((s, np.exp(10e6 * p)/sum))
-        print("")
-        print(s)
-        print(np.exp(10e6 * p)/sum)
-    # If no end token was found, return the best sequence
-    return sequences_sm
+        samples = ordered[:k]    
+        
+    return samples
 
-# Example usage
-sequences = multi_translate("/award/award_nominee/award_nominations./award/award_nomination/award_nominee", k=10)
+    
+sentence = "/award/award_nominee/award_nominations./award/award_nomination/award_nominee-1_input <SEP> <START> /award/award_nominee/award_nominations./award/award_nomination/award_nominee"
+
+paths = [i[3:-1] for i in samples if i[0] == "/award/award_nominee/award_nominations./award/award_nomination/award_nominee-1_input"]
+
+generate_length = 8
+
+print(f"\n\nPROMPT: {sentence}\n")    
+out = text_generator_with_confidence(sentence, generate_length, 5)
+
+for i in range(len(out)):
+    r, p, pl = out[i]
+    for t in r.split():
+        print(t)
+    print(f"{p} - {pl} \n")
+    
