@@ -193,4 +193,22 @@ Vendredi dernier on avait parler de l'entré comme une séquence avec SOURCE | s
 Je crois que je n'ai pas bien implémenté, et je regarde dans spécifiquement les transformer pour de la prédiction mot à mot. Ça devrait être mieux je l'espère, car j'ai assez perdu de temps là.\\
 OK journée pas hyper productive, la fatigue n'a pas aidé.\\
 Il faudra faire mieux demain.\\
+\section*{Mercredi 26-06 :}
+Ok je change de plan.\\
+Je pense que ce que j'avais fait pour la traduction n'était pas adapté.\\
+Je suis reparti voir un exemple de transformer from scratch mais cette fois-ci pour de la génération de texte.\\
+J'ai suivi ce tuto : https://debuggercafe.com/text-generation-with-transformers/.\\
+Après quelques ajustement (notamment le masque pour les PAD) ça semble fonctionner très bien !\\
+J'ai mis mes données sous la forme RELATION | SEP | START | PATH | END | PAD.\\
+Et j'ai modifié le vocabulaire pour avoir une différence entre les relations de RELATION et celles de PATH.\\
+Ça semble bien marcher. Là je vais faire la multiprédiction puis je ferais tourner sur un gros exemple.\\
+Pour la multiprédiction, j'ai besoin d'une fonction que calcule le degré de confiance en une prédiction.\\
+On repart sur le produit des probabilité d'avoir les tokens, ça reste ok.\\
+Là ça tourne sur un "gros" exemple (juste 5000 chemins). Après cela, j'ai plusieurs choses à faire :\\
+- Trouver les bons hyperparamètres pour le transformer.\\
+- Créer un autre transformer pour classifier les chemins (et voir s'ils modélisent comme il faut la relation initiale).\\
+- Tester sur d'autres données pour voir si ça marche bien.\\\\
+J'ai regardé pour les hyperparamètres. C'est possible de le faire avec un grid search (long), un random search (un peu plus rapide) ou un bayesian search (le plus rapide).\\
+Les modules hyperopt ou optuna semble pouvoir faire cela. Je ne m'y suis pas encore trop penché dessus mais ça ne semble pas non plus trivial.\\
+Objecti : m'en occuper demain.\\
 \end{document}
