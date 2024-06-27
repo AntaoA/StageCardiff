@@ -234,10 +234,14 @@ Un training sur 1000 chemins, un nombre de trials de 20 et avec l'algo tpe.\\
 \\
 Je vais lancer la même chose mais cette fois ci avec l'algo rand :\\
 Best hyperparameters found: 'batch\_size': 40.0, 'embed\_dim': 60.0, 'epochs': 90.0, 'learning\_rate': 0.000951295752507925, 'num\_heads': 4.0, 'num\_layers': 6.0\\
+Sur 5000 chemins : Best hyperparameters found: 'batch\_size': 32.0, 'embed\_dim': 40.0, 'epochs': 50.0, 'learning\_rate': 0.0006883701650054103, 'num\_heads': 6.0, 'num\_layers': 8.0\\
 \\
 Bilan sur les questions que je me pose :\\
 - Lors de la marche aléatoire, je dois sélectionner un triplet aléatoirement et essayer de trouver un chemin entre les deux entités, ou je dois m'assurer que chaques relation est représenté proportionnellement à sa présence dans le graphe, ou je dois mettre un nombre minimum pour chaque relation ?.\\
 - Lors de la vérification sur un autre jeux de donnée (graphe différent mais mêmes relations), ce que je dois vérifier c'est que losque la prédiction me donne un chemin, je dois le trouver dans le nouveau graphe (à pourcentage de confiance pré) ?\\
 - Sur combien de chemin aléatoire je dois tabler ?\\
 - Quelles relations j'extrais ? Pour chaque relation j'extrais les 10 première plus probable, je supprime celles trop improbable (moins de 1\% de chance par exemple) puis je passe dans le second transformer et si je trouve la bonne relation initiale, je le garde ?
+- Comment utiliser la perplexité pour la validation ?\\\\
+Fini pour aujourd'hui.\\
+J'ai un classifier qui marche théoriquement, je fais les tests demains matin avant la réunion.\\
 \end{document}
