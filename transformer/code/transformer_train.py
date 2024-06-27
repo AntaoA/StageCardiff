@@ -4,10 +4,10 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import os
 import pickle
-from transformer.code.module_transformer import TextDataset, TextGen
-from transformer.code.transformer_import_data import rel_vocab_size, rel_to_int, samples
-from transformer.code.transformer_param import chemin_t, device
-from transformer.code.transformer_param import SEQUENCE_LENGTH, BATCH_SIZE, epochs, learning_rate, embed_dim, num_layers, num_heads
+from module_transformer import TextDataset, TextGen
+from transformer_import_data import rel_vocab_size, rel_to_int, samples
+from transformer_param import chemin_t, device
+from transformer_param import SEQUENCE_LENGTH, BATCH_SIZE, epochs, learning_rate, embed_dim, num_layers, num_heads
 
 dataset = TextDataset(samples, rel_to_int)
 dataloader = DataLoader(

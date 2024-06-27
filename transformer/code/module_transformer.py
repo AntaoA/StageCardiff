@@ -2,7 +2,11 @@ import torch
 import torch.nn as nn
 import math
 from torch.utils.data import Dataset
-from transformer.code.transformer_param import PAD_TOKEN
+
+START_TOKEN = '<START>'
+END_TOKEN = '<END>'
+SEP_TOKEN = '<SEP>'
+PAD_TOKEN = '<PAD>'
 
 class TextDataset(Dataset):
     def __init__(self, samples, word_to_int):

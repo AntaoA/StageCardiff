@@ -7,14 +7,14 @@ BATCH_SIZE = 40
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 epochs = 100
 learning_rate = 0.001 
-embed_dim=2400
+embed_dim=240
 num_layers=6
 num_heads=4
 
 
 chemin_data = "grail-master/data/fb237_v4/"
 chemin_t_data = "transformer/data/"
-nb_paths = 5000
+nb_paths = 100
 
 
 START_TOKEN = '<START>'

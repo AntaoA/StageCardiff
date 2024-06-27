@@ -3,8 +3,8 @@ import networkx as nx
 import random
 import os
 import pickle
-from transformer.code.transformer_param import START_TOKEN, END_TOKEN, PAD_TOKEN, SEP_TOKEN
-from transformer.code.transformer_param import chemin_data, nb_paths, chemin_t_data
+from transformer_param import START_TOKEN, END_TOKEN, PAD_TOKEN, SEP_TOKEN
+from transformer_param import chemin_data, nb_paths, chemin_t_data
 
 # Dataset Preparation
 if os.path.exists(chemin_data + 'index.pickle'):

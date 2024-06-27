@@ -1,12 +1,12 @@
 from torch.utils.data import DataLoader
 from hyperopt import hp, fmin, tpe, rand, Trials, STATUS_OK
-from transformer.code.module_transformer import TextDataset, TextGen
-from transformer.code.transformer_import_data import rel_vocab_size, rel_to_int, samples
-from transformer.code.transformer_train import train
+from module_transformer import TextDataset, TextGen
+from transformer_import_data import rel_vocab_size, rel_to_int, samples
+from transformer_train import train
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from transformer.code.transformer_param import SEQUENCE_LENGTH, device
+from transformer_param import SEQUENCE_LENGTH, device
 
 
 # Espace de recherche des hyperparamètres

@@ -1,11 +1,12 @@
 import torch
-from transformer.code.transformer_train import model, rel_vocab, rel_to_int, int_to_rel
-from transformer.code.transformer_param import chemin_t_data, device, SEQUENCE_LENGTH, END_TOKEN
+from transformer_import_data import rel_vocab, rel_to_int, int_to_rel
+from transformer_train import model
+from transformer_param import chemin_t_data, device, SEQUENCE_LENGTH, END_TOKEN
 import torch.nn.functional as F
 
 def return_int_vector(text):
     words = text.split()
-    input_seq = torch.LongTensor([rel_to_int[word] for word in words[SEQUENCE_LENGTH:]]).unsqueeze(0)
+    input_seq = torch.LongTensor([rel_to_int[word] for word in words[:SEQUENCE_LENGTH]]).unsqueeze(0)
     return input_seq
 
 def sample_next(predictions, k):
