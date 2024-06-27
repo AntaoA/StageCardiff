@@ -5,34 +5,27 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import os
 import pickle
-from transformer.code.module_transformer import TextDataset, TextGen
-from transformer.code.transformer_import_data import rel_vocab_size, rel_to_int, int_to_rel, samples
-from transformer.code.transformer_train import train
-from transformer.code.transformer_param import SEQUENCE_LENGTH, device, END_TOKEN, SEP_TOKEN, chemin_t, chemin_t_data
+from module_transformer import END_TOKEN, SEP_TOKEN, PAD_TOKEN, TextGen, TextDataset
+from transformer_import_data import rel_vocab_size, rel_to_int, int_to_rel, samples
+from transformer_train import train
+from transformer_param import device, END_TOKEN, SEP_TOKEN, chemin_t, chemin_t_data
+from transformer_param import SEQUENCE_LENGTH, BATCH_SIZE, epochs, learning_rate, embed_dim, num_layers, num_heads
 
 #same data as in transformer_train.py
 new_samples = []
 
 for sample in samples:
-    src, tgt = sample[0], sample[2]
-    new_samples.append([tgt, SEP_TOKEN, src])
+    src, tgt = sample[2:], sample[0]
+    if len(src) < SEQUENCE_LENGTH-2:
+        src = src + [PAD_TOKEN] * (SEQUENCE_LENGTH - len(src) - 2)
+    new_samples.append(src + [SEP_TOKEN, tgt])
 
-SEQUENCE_LENGTH = 8
-BATCH_SIZE = 40
-
-dataset = TextDataset(samples, rel_to_int)
+dataset = TextDataset(new_samples, rel_to_int)
 dataloader = DataLoader(
-    dataset, 
+    dataset,
     batch_size=BATCH_SIZE, 
     shuffle=True, 
 )
-
-epochs = 100
-learning_rate = 0.001 
-embed_dim=2400
-num_layers=6
-num_heads=4
-
 
 
 if os.path.exists(chemin_t + 'classifier.pickle'):
@@ -89,7 +82,7 @@ def text_generator(sentence, generate_length):
 
 def return_int_vector(text):
     words = text.split()
-    input_seq = torch.LongTensor([rel_to_int[word] for word in words[SEQUENCE_LENGTH:]]).unsqueeze(0)
+    input_seq = torch.LongTensor([rel_to_int[word] for word in words]).unsqueeze(0)
     return input_seq
 
 def sample_next(predictions, k):
@@ -109,9 +102,8 @@ def text_generator(sentence):
     print('\n')
 
     
-def text_generator_with_confidence(sentence, generate_length, k):
+def text_generator_with_confidence(sentence, k):
     model.eval()
-    samples = " ".join(sentence.split())        
     int_vector = return_int_vector(sentence).to(device)
     candidates = []
     with torch.no_grad():
@@ -144,8 +136,8 @@ rel_src = []
 rel_tgt = []
 
 for line in lines:
-    pred, prob, prob_l = lines.split(":")
-    if prob > 0.05:
+    pred, prob, prob_l = line.strip().decode('utf-8').split(":")
+    if float(prob) > 0.05:
         prediction = pred.split()
         rel_src.append(prediction[2:])
         rel_tgt.append(prediction[0])
@@ -153,7 +145,7 @@ for line in lines:
 
 with open(chemin_t_data + "classification_path.txt", "w") as f:
     for i, path in enumerate(rel_src):
-            sentence = "<START> " + path + " <END> <SEP>"
+            sentence = " ".join(path) + " <SEP>"
             out = text_generator_with_confidence(sentence, 5)
             for r, p in out:
                 f.write(f"{path} : {rel_tgt[i]} : {r} : {p} \n")
