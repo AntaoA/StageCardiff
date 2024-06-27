@@ -94,7 +94,6 @@ class TextGen(nn.Module):
     # Positional encoding is required. Else the model does not learn.
 
     def forward(self, x):
-        print(x.shape)
         emb = self.emb(x)
         
         # Generate input sequence mask with shape (SEQUENCE_LENGTH, SEQUENCE_LENGTH)
