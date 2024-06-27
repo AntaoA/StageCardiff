@@ -1,24 +1,8 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import math
-import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
-from collections import Counter
-import os
-import random
-import networkx as nx
-import pickle
-import numpy as np
-
-
-START_TOKEN = '<START>'
-END_TOKEN = '<END>'
-PAD_TOKEN = '<PAD>'
-SEP_TOKEN = '<SEP>'
-
-SEQUENCE_LENGTH = 8
-
+from torch.utils.data import Dataset
+from transformer.code.transformer_param import PAD_TOKEN
 
 class TextDataset(Dataset):
     def __init__(self, samples, word_to_int):
@@ -75,9 +59,9 @@ class PositionalEncoding(nn.Module):
         return self.dropout(x)
     
 class TextGen(nn.Module):
-    def __init__(self, vocab_size, embed_dim, num_layers, num_heads):
+    def __init__(self, vocab_size, embed_dim, num_layers, num_heads, sequence_length):
         super(TextGen, self).__init__()
-        self.pos_encoder = PositionalEncoding(max_len=SEQUENCE_LENGTH, d_model=embed_dim)
+        self.pos_encoder = PositionalEncoding(max_len=sequence_length, d_model=embed_dim)
         self.emb = nn.Embedding(vocab_size, embed_dim)
         self.decoder_layer = nn.TransformerDecoderLayer(
             d_model=embed_dim, 

@@ -3,14 +3,10 @@ import networkx as nx
 import random
 import os
 import pickle
-from transformer.code.module_transformer import START_TOKEN, END_TOKEN, PAD_TOKEN, SEP_TOKEN
-
-chemin_data = "grail-master/data/fb237_v4/"
-chemin_t_data = "transformer/data/"
-nb_paths = 5000
+from transformer.code.transformer_param import START_TOKEN, END_TOKEN, PAD_TOKEN, SEP_TOKEN
+from transformer.code.transformer_param import chemin_data, nb_paths, chemin_t_data
 
 # Dataset Preparation
-
 if os.path.exists(chemin_data + 'index.pickle'):
     with open(chemin_data + 'index.pickle', 'rb') as f:
         int_to_rel, rel_to_int, rel_vocab = pickle.load(f)
@@ -27,8 +23,6 @@ else:
     with open(chemin_data + 'list_rel.txt', 'r') as file:
         lines += file.readlines()    
     
-
-
     # Ajouter les relation et les relations inverses
     for line in lines:
         line = line.strip()
@@ -64,7 +58,6 @@ def inv(relation):
         return relation[:-2]
     else:
         return relation + '-1'
-
 
 def random_walk(start_node, end_node, relation, max_length, graph, alpha, S=START_TOKEN, P=PAD_TOKEN, E=END_TOKEN):
     path = [S]

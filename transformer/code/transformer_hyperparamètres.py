@@ -1,9 +1,12 @@
-from transformer_train import *
-
-
+from torch.utils.data import DataLoader
 from hyperopt import hp, fmin, tpe, rand, Trials, STATUS_OK
-
-
+from transformer.code.module_transformer import TextDataset, TextGen
+from transformer.code.transformer_import_data import rel_vocab_size, rel_to_int, samples
+from transformer.code.transformer_train import train
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from transformer.code.transformer_param import SEQUENCE_LENGTH, device
 
 
 # Espace de recherche des hyperparamètres
@@ -30,7 +33,8 @@ def objective(params):
         vocab_size=rel_vocab_size, 
         embed_dim=int(params['embed_dim']*params['num_heads']),
         num_layers=int(params['num_layers']), 
-        num_heads=int(params['num_heads'])
+        num_heads=int(params['num_heads']),
+        sequence_length=SEQUENCE_LENGTH
     ).to(device)
     
     # Définir le critère et l'optimisateur

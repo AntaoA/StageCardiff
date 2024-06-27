@@ -1,6 +1,34 @@
-from transformer_train import *
+import torch
+from transformer.code.transformer_train import model, rel_vocab, rel_to_int, int_to_rel
+from transformer.code.transformer_param import chemin_t_data, device, SEQUENCE_LENGTH, END_TOKEN
+import torch.nn.functional as F
 
+def return_int_vector(text):
+    words = text.split()
+    input_seq = torch.LongTensor([rel_to_int[word] for word in words[SEQUENCE_LENGTH:]]).unsqueeze(0)
+    return input_seq
 
+def sample_next(predictions, k):
+    probabilities = F.softmax(predictions[:, -1, :], dim=-1).cpu()
+    topk_probs, topk_indices = torch.topk(probabilities, k)
+    return topk_probs[0], topk_indices[0]
+
+def text_generator(sentence, generate_length):
+    model.eval()
+    sample = sentence
+    for i in range(generate_length):
+        int_vector = return_int_vector(sample)
+        if len(int_vector) >= SEQUENCE_LENGTH - 1:
+            break
+        input_tensor = int_vector.to(device)
+        with torch.no_grad():
+            predictions = model(input_tensor)
+        next_token = sample_next(predictions, 1)
+        sample += ' ' + int_to_rel[next_token]
+        if next_token == rel_to_int[END_TOKEN]:
+            break
+    print(sample)
+    print('\n')
 
     
 def text_generator_with_confidence(sentence, generate_length, k):
@@ -39,14 +67,11 @@ def text_generator_with_confidence(sentence, generate_length, k):
     return samples
 
     
-generate_length = 8
-
-
-with open("nouvelles_relations.txt", "w") as f:
+with open(chemin_t_data + "nouvelles_relations.txt", "w") as f:
     for r in rel_vocab:
         if r[-6:] == "_input":
             sentence = r + " <SEP> <START>"
-            out = text_generator_with_confidence(sentence, generate_length, 5)
+            out = text_generator_with_confidence(sentence, SEQUENCE_LENGTH, 5)
             for i in range(len(out)):
                 path, p, pl = out[i]
                 f.write(f"{path} : {p} : {pl} \n")
