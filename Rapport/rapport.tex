@@ -252,4 +252,14 @@ C'est pas exactement une bonne mesure de la qualité du modèle, mais ça m'aide
 Ensuite il va falloir que je me penche sur ce que ça veux dire exactement d'utiliser les données de la validation.\\
 Pour mon test global, je trouve la bonne relation pour 87\% d'entre elles, et quand je trouve c'est en moyenne à la place 1.7.\\
 54\% la première place, 15\% la seconde, 9\% la troisième, 6\% la quatrième, 2\% la cinquième et 13\% en dehors du top 5.\\
+Réunion avec Stephan Schockaert.\\
+J'ai fais un peu de la merde : l'optimisation des hyperparamètres n'est pas correcte, je dois la faire sur le jeux de validation.\\
+Pour ça, je dois créer les chemins via les données de validations, et pour chaque chemin, calculer la probabilité qui arrive pour calculer la perplexité : $-\sum_i\log p_i$ si $p_i$ est la probabilité d'avoir la relation $r_i$, du chemin $r_1\ldots r_n$, en rentrant $r <SEP> r_1 \ldots r_{i-1}$.\\
+L'objectif est de minimiser cette perplexité.\\
+De plus, pour les chemins il en faut un nombre similaire pour chaque relation.\\
+Ok ça ma saouler d'attentre à chaque fois de construire les chemins, et puis je crois qu'il en faut vraiment beaucoup plus que ce que je faisais, j'ai donc décider de stocker tous les chemins existant dans un fichier en .pickle.\\
+Problème de mémoire, je dépasse largement les 30Gio. Je stocke donc dans un fichier différent pour chaque relation.\\
+C'est gros mais j'espère que ça va passer.\\
+J'ai des relation avec plus de d'un million de chemins. Et je ne suis qu'avec les données de validations, donc pas les plus grosse encore.\\
+
 \end{document}
