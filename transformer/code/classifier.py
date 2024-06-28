@@ -149,8 +149,3 @@ with open(chemin_t_data + "classification_path.txt", "w") as f:
             out = text_generator_with_confidence(sentence, 5)
             for r, p in out:
                 f.write(f"{path} : {rel_tgt[i]} : {r} : {p} \n")
-                
-
-
-
-print("fini")

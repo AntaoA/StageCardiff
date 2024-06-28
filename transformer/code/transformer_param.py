@@ -12,10 +12,10 @@ num_layers=6
 num_heads=4
 
 
-chemin_data = "grail-master/data/fb237_v4/"
+chemin_data = "grail-master/data/fb237_v4_ind/"
 chemin_t_data = "transformer/data/"
-nb_paths = 100
-
+nb_paths_per_relation = 10
+nb_paths = 50
 
 START_TOKEN = '<START>'
 END_TOKEN = '<END>'
