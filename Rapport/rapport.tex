@@ -244,4 +244,12 @@ Bilan sur les questions que je me pose :\\
 - Comment utiliser la perplexité pour la validation ?\\\\
 Fini pour aujourd'hui.\\
 J'ai un classifier qui marche théoriquement, je fais les tests demains matin avant la réunion.\\
+\section*{Vendredi 28-06 :}
+Ok à priori j'ai tout qui marche : import des données, transformer pour générer les chemins, classifier pour vérifier s'il sont bons.\\
+J'ai même l'optimisation des hyperparamètres qui marche convenablement (c'est terriblement long mais ça fonctionne).\\
+Je lance un test global sur 5000 chemins (générations des chemins puis classification) pour voir mon taux de réussite (pour combien de relations parmis les 237 j'arrive à prédire un chemin qui se rattache à me relation, dans le top 5).\\
+C'est pas exactement une bonne mesure de la qualité du modèle, mais ça m'aidera à y voir plus clair déjà.\\
+Ensuite il va falloir que je me penche sur ce que ça veux dire exactement d'utiliser les données de la validation.\\
+Pour mon test global, je trouve la bonne relation pour 87\% d'entre elles, et quand je trouve c'est en moyenne à la place 1.7.\\
+54\% la première place, 15\% la seconde, 9\% la troisième, 6\% la quatrième, 2\% la cinquième et 13\% en dehors du top 5.\\
 \end{document}
