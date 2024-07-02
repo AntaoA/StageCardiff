@@ -4,7 +4,8 @@ import random
 import os
 import pickle
 from transformer_param import START_TOKEN, END_TOKEN, PAD_TOKEN, SEP_TOKEN
-from transformer_param import chemin_data, chemin_t_data, nb_paths_per_relation
+from transformer_param import chemin_t_data, nb_paths_per_relation
+from transformer_param import chemin_data_train as chemin_data
 
 # Dataset Preparation
 if os.path.exists(chemin_data + 'index.pickle'):
@@ -80,19 +81,17 @@ else:
             triplet_from_rel[rel_to_int_input[r + '_input']] += [(n1, n2)]
             triplet_from_rel[rel_to_int_input[r + '-1_input']] += [(n2, n1)]
 
-
     somme_triplet = 0
     somme_path = 0
     with open(chemin_t_data + 'stats_globale_paths.txt', 'w') as f:
         for i in range(len(vocab_input)):
             name_file = chemin_data + "list_paths/" + "rel_"+str(i) + '.pickle'
             print(f"voc {i} : {len(triplet_from_rel[i])} triplets")
-            if i % 2 == 0:
+            if i % 2 == 0 and not os.path.exists(name_file):   
                 list_paths = []
                 m = 0
                 for n1, n2 in triplet_from_rel[i]:
-                    if m % 10 == 0:
-                        print(m)
+                    print(m)
                     m += 1
                     paths = list(nx.all_simple_paths(G, n1, n2, cutoff=4))
                     paths_valid = []

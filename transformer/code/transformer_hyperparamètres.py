@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from transformer_param import SEQUENCE_LENGTH, device
-
+from transformer_validation import calculate_perplexity
 
 # Espace de recherche des hyperparamètres
 space = {
@@ -44,23 +44,9 @@ def objective(params):
     train(model, int(params['epochs']), dataloader, criterion, optimizer)
     # Calculer la perte (ou une autre métrique) pour évaluer le modèle
     # Utiliser une simple moyenne de la perte d'entraînement pour cet exemple
-    running_loss = 0
-    model.eval()
-    with torch.no_grad():
-        for input_seq, target_seq, padding_mask in dataloader:
-            input_seq, target_seq, padding_mask = input_seq.to(device), target_seq.to(device), padding_mask.to(device)
-            outputs = model(input_seq)
-            target_seq = target_seq.contiguous().view(-1)
-            outputs = outputs.view(-1, rel_vocab_size)
-            active_loss = padding_mask.view(-1) == 1
-            active_logits = outputs.view(-1, rel_vocab_size)[active_loss]
-            active_labels = target_seq.view(-1)[active_loss]
-            loss = criterion(active_logits, active_labels)
-            running_loss += loss.item()
-    avg_loss = running_loss / len(dataloader)
-    
+    perplexity, n_tokens = calculate_perplexity(model, dataset)
     # Minimiser la perte moyenne
-    return {'loss': avg_loss, 'status': STATUS_OK}
+    return {'loss': perplexity, 'status': STATUS_OK}
 
 # Définir les essais pour stocker les résultats
 trials = Trials()

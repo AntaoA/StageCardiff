@@ -12,7 +12,9 @@ num_layers=6
 num_heads=4
 
 
-chemin_data = "grail-master/data/fb237_v4_ind/"
+chemin_data_train = "grail-master/data/fb237_v4/"
+chemin_data_validation = "grail-master/data/fb237_v4_ind/"
+
 chemin_t_data = "transformer/data/"
 nb_paths_per_relation = 500
 nb_paths = 50
