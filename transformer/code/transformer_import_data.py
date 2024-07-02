@@ -129,9 +129,6 @@ else:
         pickle.dump((G, triplet_from_rel, list_paths), f)
 
 
-if (r['relation'] != (int_to_rel_input[i])[:-6] or (path[j] != n1 or path[j+1] != n2)) and (j>=1 and (path[j-1] != [path[j+1]] or inv(r['relation']) != last_rel) ):
-    True
-
 def random_walk(start_node, end_node, relation, max_length, graph, alpha, S=START_TOKEN, P=PAD_TOKEN, E=END_TOKEN):
     path = [S]
     current_node = start_node
@@ -203,6 +200,7 @@ else:
     #            rel_tgt.append(' '.join(path))
         
     for j in range(len(vocab_input)):
+        print(j)
         if j % 2 == 0:
             with open(chemin_data + "list_paths/" + "rel_"+str(j) + '.pickle', 'rb') as g:
                 list_paths = pickle.load(g)

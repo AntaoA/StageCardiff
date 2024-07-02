@@ -14,7 +14,7 @@ num_heads=4
 
 chemin_data = "grail-master/data/fb237_v4_ind/"
 chemin_t_data = "transformer/data/"
-nb_paths_per_relation = 10
+nb_paths_per_relation = 500
 nb_paths = 50
 
 START_TOKEN = '<START>'
