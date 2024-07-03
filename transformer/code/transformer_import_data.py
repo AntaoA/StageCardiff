@@ -3,9 +3,10 @@ import networkx as nx
 import random
 import os
 import pickle
-from transformer_param import START_TOKEN, END_TOKEN, PAD_TOKEN, SEP_TOKEN
+from transformer_param import START_TOKEN, END_TOKEN, PAD_TOKEN, SEP_TOKEN, SEQUENCE_LENGTH
 from transformer_param import chemin_t_data, nb_paths_per_relation
 from transformer_param import chemin_data_train as chemin_data
+import transformer_param as tp
 
 # Dataset Preparation
 if os.path.exists(chemin_data + 'index.pickle'):
@@ -165,7 +166,7 @@ else:
         print(f"Relation {j}")
         if j % 2 == 0:
             list_paths = []
-            if j == 294:
+            if j == 294 and chemin_data == tp.chemin_data_train:
                 num_per_file = [0] * 8
                 for k in range (nb_paths_per_relation):
                     num_file = random.randint(0, 7)
@@ -185,7 +186,7 @@ else:
                     list_paths = []
 
 
-            elif j == 296:
+            elif j == 296 and chemin_data == tp.chemin_data_train:
                 num_per_file = [0] * 15
                 for k in range (nb_paths_per_relation):
                     num_file = random.randint(0, 14)
@@ -205,7 +206,7 @@ else:
                     list_paths = []
 
 
-            elif j == 290:
+            elif j == 290 and chemin_data == tp.chemin_data_train:
                 num_per_file = [0] * 3
                 for k in range (nb_paths_per_relation):
                     num_file = random.randint(0, 2)
@@ -236,7 +237,7 @@ else:
                     rel_tgt.append(' '.join(inv_path(path)))
     
     
-    samples = [[r1, SEP_TOKEN, START_TOKEN] + r2.split(' ') + [END_TOKEN] for r1, r2 in zip(rel_src, rel_tgt)]
+    samples = [[r1, SEP_TOKEN, START_TOKEN] + r2.split(' ') + [END_TOKEN] + [PAD_TOKEN] * (SEQUENCE_LENGTH - 4 - len(r2.split(' '))) for r1, r2 in zip(rel_src, rel_tgt)]
     
     with open(chemin_data + 'list_path.pickle', 'wb') as f:
         pickle.dump((samples, rel_src, rel_tgt), f)

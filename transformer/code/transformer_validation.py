@@ -44,7 +44,7 @@ def calculate_perplexity(model):
         
         for i,path_txt in enumerate(rel_tgt):
             if i % 100 == 0:
-                print(f"{i} sur {len(rel_tgt)}")
+                print(f"{i} sur {len(rel_tgt)}")
             path = path_txt.split()
             int_list = [rel_to_int[rel_src[i]], rel_to_int[SEP_TOKEN]]
 
@@ -63,5 +63,5 @@ def calculate_perplexity(model):
 
     return total_log_likelihood / total_tokens, total_tokens
 
-log_likelihood, tokens = calculate_perplexity(model)
-print(f"Perplexity: {exp(-log_likelihood)} -- Tokens: {tokens}") 
+#log_likelihood, tokens = calculate_perplexity(model)
+#print(f"Perplexity: {exp(-log_likelihood)} -- Tokens: {tokens}") 

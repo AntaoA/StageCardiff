@@ -16,7 +16,7 @@ chemin_data_train = "grail-master/data/fb237_v4/"
 chemin_data_validation = "grail-master/data/fb237_v4_ind/"
 
 chemin_t_data = "transformer/data/"
-nb_paths_per_relation = 500
+nb_paths_per_relation = 50
 
 
 START_TOKEN = '<START>'

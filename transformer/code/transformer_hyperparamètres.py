@@ -19,21 +19,24 @@ rel_vocab_size = len(rel_vocab)
 
 if os.path.exists(chemin_data_train + 'list_path.pickle'):
     with open(chemin_data_train + 'list_path.pickle', 'rb') as f:
-        samples = pickle.load(f)
+        samples, _, _ = pickle.load(f)
 else:
     print("Error: missing data")
     
 
 # Espace de recherche des hyperparamètres
 space = {
-    'epochs': hp.quniform('epochs', 10, 100, 10),
-    'batch_size': hp.quniform('batch_size', 8, 128, 8),
-    'num_layers': hp.quniform('num_layers', 1, 8, 1),
-    'num_heads': hp.quniform('num_heads', 1, 8, 1),
-    'embed_dim': hp.quniform('embed_dim', 10, 100, 10),
+    'epochs': hp.quniform('epochs', 10, 100, 1),
+    'batch_size': hp.quniform('batch_size', 16, 128, 1),
+    'num_layers': hp.quniform('num_layers', 1, 12, 1),
+    'num_heads': hp.quniform('num_heads', 1, 16, 1),
+    'embed_dim_multiplier': hp.quniform('embed_dim', 1, 32, 1),
     'learning_rate': hp.uniform('learning_rate', 0.0001, 0.01)
 }
 def objective(params):
+
+    params['embed_dim'] = params['embed_dim_multiplier'] * params['num_heads']
+
 
     # Afficher les paramètres de l'essai en cours
     print("Testing parameters:", params)
@@ -46,7 +49,7 @@ def objective(params):
     # Définir le modèle
     model = TextGen(
         vocab_size=rel_vocab_size, 
-        embed_dim=int(params['embed_dim']*params['num_heads']),
+        embed_dim=int(params['embed_dim']),
         num_layers=int(params['num_layers']), 
         num_heads=int(params['num_heads']),
         sequence_length=SEQUENCE_LENGTH
@@ -67,6 +70,6 @@ def objective(params):
 trials = Trials()
 
 # Exécuter l'optimisation
-best = fmin(fn=objective, space=space, algo=rand.suggest, max_evals=20, trials=trials)
+best = fmin(fn=objective, space=space, algo=rand.suggest, max_evals=10, trials=trials)
 
 print("Best hyperparameters found:", best)
