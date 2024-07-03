@@ -261,5 +261,43 @@ Ok ça ma saouler d'attentre à chaque fois de construire les chemins, et puis j
 Problème de mémoire, je dépasse largement les 30Gio. Je stocke donc dans un fichier différent pour chaque relation.\\
 C'est gros mais j'espère que ça va passer.\\
 J'ai des relation avec plus de d'un million de chemins. Et je ne suis qu'avec les données de validations, donc pas les plus grosse encore.\\
-
+\section*{Mardi 02-07 :}
+J'ai lancer l'algo pour la création de la liste de tous les chemins, cette fois-ci sur les données d'entraînement.\\
+J'ai aussi créer un fichier transformer\_validation, pour calculer la perplexité.\\
+D'ailleurs je suis pas hyper au fait du calcul de la perplexité (moyenne de la somme des log, exponentielle, ...).\\
+Ok j'ai testé ça me renvoie bien une valeur.\\
+\section*{Mercredi 03-07 :}
+Les relations 294, 296 et 290 posent problèmes.\\
+Je les sépare en plusieurs fichier.\\
+C'est vraiment une méthode de merde. Je devrais tester avec une BDD mais je ne les métrise pas.\\
+Je pense que juste sur le principe c'est nul comme méthode, mais j'ai pas trouver de random walk qui soit pertinente pour trouver un chemin aléatoire entre deux relations.\\
+Mais bon juste si je passe de 4 à 5 relations autorisé c'est finito cette méthode, impossible à mettre en place sur des gros graphes.\\
+Mais bon j'ai déjà fait une grosse partie du travail pour implémenter ça, je ne vais pas renoncer maintenant, mais faudrait vraiment que je trouve une autre méthode.\\
+Mais déjà il faudrait que ça marche avant la réunion avec Steven.\\
+En découpant les fichiers, ça marche effectivement. Ça ne prend donc plus trop de temps pour avoir des chemins aléatoires.\\
+Pour le moment j'en prend 500 par relations, mais je pense que ça va prendre du temps à entraîner le transformer avec ça.\\
+On verra, c'est le prochain truc que je fais dès que tous les chemins sont générés.\\
+Ensuite il faudra vérifier que la validation (avec le calcul de la perplexité) fonctionne, puis on pourra lancer l'optimisation des hyperparamètres.\\
+Pour information, mon pickle le plus lourd fait 3.3G (en vrai j'ai plus de 35.6 Go pour la relation 296, mais séparé en 15 fichiers), et je l'ouvre en utilisant environ 72\% de la mémoire de mon ordinateur.\\
+Ok ça à fini de compiler. J'ai juste eu à rajouter les token START, END et PAD dans les chemins et le train du transformer est en cours.\\
+C'est pas rapide, mais c'est pas trop long non plus. Une epoch (2 têtes, 2 layers, 500 chemins par relations) prend environ 45s.\\
+Pour les vrais test, si ce temps de bouge pas trop après avoir optimisé les hyperparamètres, je pourrais surement montrer à 5000 chemins par relation, ce qui me fera 2 370 000 données.\\
+J'ai lancée la validation, je suis toujours avec 500 chemins par relation.\\
+Ils me disent qu'il y a 200 000 test. Je pense que j'ai du oublier de faire les avec les relations inverses en tant que source, car ça me paraît peu.\\
+Mais bon encore une fois c'est pas court mais c'est pas trop long, je dois être à 0.5s pour tester 100 chemins.\\
+Ça me fait de l'ordre de 1000s, soit un peu plus d'un quart d'heure.\\
+C'est OK quand on le fait une fois mais pour l'optimisation des hyperparamètres ça va être long, surtout que ce calcul devrait rester constant (bon avec 2 fois plus de chemins donc 30min) mais pour le trainning à chaque fois tout dépendra des hyperparametres.\\
+Peu être que je dois diminuer à seulement 10 chemins par relation, pour que ça soit plus rapide.\\
+Surtout qu'OK c'est bien beau ARCAA mais j'ai toujours pas la ref de si c'est vraiment plus rapide. Le seul truc sûr c'est que ça tourne tout seul, et que ça ne fais ni souffler ni chauffer mon pc.\\
+Pour le premier test (juste 200000 chemins) j'ai une perplexité de 29.8.\\
+20 epoch, 128 batch\_size, 2 layers, 2 heads, 100 embed\_dim, 0.001 learning\_rate.\\
+Ah non ouai j'ai dit n'imp, 200 000 chemins c'est bon, il y a bien 400 relations (avec les inverses) et 500 chemins par relations.\\
+Ok c'est un poil long en fait.\\
+Je vais déjà baisser à 50 chemins par relations pour la validation.\\
+Ok je vais diminuer à 50 pour le train aussi.\\
+Je ferais les vrais tests plus tard.\\
+Autre technique, je vais arrêter de supprimer les list\_paths, juste les renommer, pour les reprendre sans devoir tout re-calculer quand j'en ai besoin.\\
+Bon tout ça ça va être vraiment long. Surtout que je suis cencé avoir beaucoup de trials. Genre entre 100 et 500...\\
+Je vais lancer sur ARCAA entre aujourd'hui et demain. Ça va faire environ 60h de calculs. Je sais pas si c'est suffisant pour disons 200 trials.\\
+On verra demain.\\
 \end{document}
