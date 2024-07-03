@@ -1,20 +1,16 @@
-from transformer_param import chemin_data_validation, chemin_data_train, chemin_t, device, BATCH_SIZE, SEQUENCE_LENGTH
+from transformer_param import chemin_data_validation, chemin_data_train, chemin_t, device, BATCH_SIZE, SEQUENCE_LENGTH, PAD_TOKEN, SEP_TOKEN, START_TOKEN, END_TOKEN
 import os
 import pickle
 import torch
 from torch.nn import functional as F
-from module_transformer import TextDataset
-from torch.utils.data import DataLoader
-from math import log
+from math import log, exp
+
 
 if os.path.exists(chemin_data_train + 'index.pickle'):
-    with open(chemin_data_validation + 'index.pickle', 'rb') as f:
+    with open(chemin_data_train + 'index.pickle', 'rb') as f:
         int_to_rel, rel_to_int, rel_vocab, vocab_input, rel_to_int_input, int_to_rel_input = pickle.load(f)
 else:
     print("Erreur: fichier index.pickle non trouvé")
-
-def tokenize(sentence):
-    return [rel_to_int[rel] for rel in sentence.split() if rel in rel_to_int]
 
 
 if os.path.exists(chemin_t + 'transformer.pickle'):
@@ -23,22 +19,21 @@ if os.path.exists(chemin_t + 'transformer.pickle'):
 else:
     print("Erreur: fichier transformer.pickle non trouvé")
 
+if os.path.exists(chemin_data_validation + 'index.pickle'):
+    with open(chemin_data_validation + 'index.pickle', 'rb') as f:
+        int_to_rel_v, rel_to_int_v, rel_vocab_v, vocab_input_v, rel_to_int_input_v, int_to_rel_input_v = pickle.load(f)
+else:
+    print("Erreur: fichier index.pickle non trouvé")
+
 
 if os.path.exists(chemin_data_validation + 'list_path.pickle'):
     with open(chemin_data_validation + 'list_path.pickle', 'rb') as f:
-        samples = pickle.load(f)
+        samples, rel_src, rel_tgt = pickle.load(f)
 else:
     print("Erreur: fichier list_path.pickle non trouvé")
 
 
-dataset = TextDataset(samples, rel_to_int)
-dataloader = DataLoader(
-    dataset, 
-    batch_size=BATCH_SIZE, 
-    shuffle=True, 
-)
-
-def calculate_perplexity(model, dataset):
+def calculate_perplexity(model):
     model.eval()
     model.to(device)
     
@@ -47,23 +42,26 @@ def calculate_perplexity(model, dataset):
 
     with torch.no_grad():
         
-        for input_seq, target_seq, padding_mask in dataloader:
-            input_seq, target_seq, padding_mask = input_seq.to(device), target_seq.to(device), padding_mask.to(device)
-            
-            tokenized_inputs = tokenize(input_seq)
+        for i,path_txt in enumerate(rel_tgt):
+            if i % 100 == 0:
+                print(f"{i} sur {len(rel_tgt)}")
+            path = path_txt.split()
+            int_list = [rel_to_int[rel_src[i]], rel_to_int[SEP_TOKEN]]
 
-            
-            outputs = model(input_seq)
-            
-            for i in range(BATCH_SIZE):
-                for j in range(SEQUENCE_LENGTH):
-                    tgt_token = target_seq[i][j]
-                    prob = outputs[i][j][tgt_token]
-                    total_tokens += 1
-                    total_log_likelihood += log(prob)
-    
-    return total_log_likelihood, total_tokens
+            for j in range(len(path)-1):
+                model.eval()
+                int_list.append(rel_to_int[path[j]])
+                int_vector = torch.tensor(int_list).unsqueeze(0).to(device)
 
-log_likelihood, tokens = calculate_perplexity(model, dataset)
-print(f"Perplexity: {-log_likelihood} -- Tokens: {tokens}")
+                predictions = model(int_vector)
+                
+                prob = F.softmax(predictions[:, -1, :], dim=-1)[0][rel_to_int[path[j+1]]].item()
+                
+                
+                total_tokens += 1
+                total_log_likelihood += log(prob)
 
+    return total_log_likelihood / total_tokens, total_tokens
+
+log_likelihood, tokens = calculate_perplexity(model)
+print(f"Perplexity: {exp(-log_likelihood)} -- Tokens: {tokens}") 

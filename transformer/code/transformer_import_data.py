@@ -63,7 +63,7 @@ def inv_path(path):
 
 if os.path.exists(chemin_data + 'graphe_train.pickle'):
     with open(chemin_data + 'graphe_train.pickle', 'rb') as f:
-        G, triplet_from_rel, liqt_path = pickle.load(f)
+        G, triplet_from_rel = pickle.load(f)
 else:
     G = nx.MultiDiGraph()
     
@@ -80,52 +80,9 @@ else:
             
             triplet_from_rel[rel_to_int_input[r + '_input']] += [(n1, n2)]
             triplet_from_rel[rel_to_int_input[r + '-1_input']] += [(n2, n1)]
-
-    somme_triplet = 0
-    somme_path = 0
-    with open(chemin_t_data + 'stats_globale_paths.txt', 'w') as f:
-        for i in range(len(vocab_input)):
-            name_file = chemin_data + "list_paths/" + "rel_"+str(i) + '.pickle'
-            print(f"voc {i} : {len(triplet_from_rel[i])} triplets")
-            if i % 2 == 0 and not os.path.exists(name_file):   
-                list_paths = []
-                m = 0
-                for n1, n2 in triplet_from_rel[i]:
-                    print(m)
-                    m += 1
-                    paths = list(nx.all_simple_paths(G, n1, n2, cutoff=4))
-                    paths_valid = []
-                    last_rel = (int_to_rel_input[i])[:-6]
-                    for path in paths:
-                        paths_rel = [[]]
-                        for j in range(len(path) - 1):
-                            d = G.get_edge_data(path[j], path[j+1])
-                            new_path_rel = []
-                            for p in paths_rel:
-                                last_rel = p[-1] if len(p)>0 else last_rel
-                                for r in d:
-                                    new_p = p + [d[r]['relation']]
-                                    if d[r]['relation'] == last_rel and path[j] == n2 and path[j+1] == n1:
-                                        continue
-                                    if j < 1 or path[j-1] != path[j+1] or inv(d[r]['relation'] != last_rel):
-                                        new_path_rel.append(new_p)
-                            paths_rel = new_path_rel
-                        paths_valid += paths_rel
-                    list_paths += paths_valid
-                somme_triplet += len(triplet_from_rel[i])
-                somme_path += len(list_paths)
-            
-            
-                with open(name_file, 'wb') as g:
-                    pickle.dump(list_paths, g)
-            
-                f.write(f"voc {i} : {len(list_paths)} paths : {len(triplet_from_rel[i])} triplets")
-                f.write(f"Jusqu'à présent : {somme_path} paths : {somme_triplet} triplets\n")
-                print(f"{len(list_paths)} paths")
-                print(f"Jusqu'à présent : {somme_path} paths : {somme_triplet} triplets\n")
-            
+    
     with open(chemin_data + 'graphe_train.pickle', 'wb') as f:
-        pickle.dump((G, triplet_from_rel, list_paths), f)
+        pickle.dump((G, triplet_from_rel), f)
 
 
 def random_walk(start_node, end_node, relation, max_length, graph, alpha, S=START_TOKEN, P=PAD_TOKEN, E=END_TOKEN):
@@ -180,7 +137,7 @@ def random_walk(start_node, end_node, relation, max_length, graph, alpha, S=STAR
 
 if os.path.exists(chemin_data + 'list_path.pickle'):
     with open(chemin_data + 'list_path.pickle', 'rb') as f:
-        samples = pickle.load(f)
+        samples, rel_src, rel_tgt = pickle.load(f)
 else:
     
     rel_src = []
@@ -188,6 +145,7 @@ else:
     
     #for j in range(len(vocab_input)): 
     #    i = 0
+    #    vide = 0
     #    while i < nb_paths_per_relation:
     #        r = int_to_rel_input[j]
     #        node1, node2 = random.choice(triplet_from_rel[j])
@@ -197,29 +155,91 @@ else:
     #            i = i+1
     #            rel_src.append(r)
     #            rel_tgt.append(' '.join(path))
-        
+    #        else:  
+    #           vide += 1
+    #        if vide > 100:
+    #            break
+    
+          
     for j in range(len(vocab_input)):
-        print(j)
+        print(f"Relation {j}")
         if j % 2 == 0:
-            with open(chemin_data + "list_paths/" + "rel_"+str(j) + '.pickle', 'rb') as g:
-                list_paths = pickle.load(g)
-            for k in range (nb_paths_per_relation):
-                path = random.choice(list_paths)
-                rel_src.append(int_to_rel_input[j])
-                rel_tgt.append(' '.join(path))
-        else:
-            with open(chemin_data + "list_paths/" + "rel_"+str(j-1) + '.pickle', 'rb') as g:
-                list_paths = pickle.load(g)
-            for k in range (nb_paths_per_relation):
-                path = random.choice(list_paths)
-                rel_src.append(int_to_rel_input[j])
-                rel_tgt.append(' '.join(inv_path(path)))
+            list_paths = []
+            if j == 294:
+                num_per_file = [0] * 8
+                for k in range (nb_paths_per_relation):
+                    num_file = random.randint(0, 7)
+                    num_per_file[num_file] += 1
+                for num_file in range(8):
+                    with open(chemin_data + "list_paths/" + "rel_"+str(j) + '_' + str(num_file) + '.pickle', 'rb') as g:
+                        list_paths = pickle.load(g)
+                    for k in range (num_per_file[num_file]):
+                        path = random.choice(list_paths)
+                        rel_src.append(int_to_rel_input[j])
+                        rel_tgt.append(' '.join(path))
+                        
+                        path = random.choice(list_paths)
+                        rel_src.append(int_to_rel_input[j+1])
+                        rel_tgt.append(' '.join(inv_path(path)))
+                    
+                    list_paths = []
+
+
+            elif j == 296:
+                num_per_file = [0] * 15
+                for k in range (nb_paths_per_relation):
+                    num_file = random.randint(0, 14)
+                    num_per_file[num_file] += 1
+                for num_file in range(15):
+                    with open(chemin_data + "list_paths/" + "rel_"+str(j) + '_' + str(num_file) + '.pickle', 'rb') as g:
+                        list_paths = pickle.load(g)
+                    for k in range (num_per_file[num_file]):
+                        path = random.choice(list_paths)
+                        rel_src.append(int_to_rel_input[j])
+                        rel_tgt.append(' '.join(path))
+                        
+                        path = random.choice(list_paths)
+                        rel_src.append(int_to_rel_input[j+1])
+                        rel_tgt.append(' '.join(inv_path(path)))
+                    
+                    list_paths = []
+
+
+            elif j == 290:
+                num_per_file = [0] * 3
+                for k in range (nb_paths_per_relation):
+                    num_file = random.randint(0, 2)
+                    num_per_file[num_file] += 1
+                for num_file in range(3):
+                    with open(chemin_data + "list_paths/" + "rel_"+str(j) + '_' + str(num_file) + '.pickle', 'rb') as g:
+                        list_paths = pickle.load(g)
+                    for k in range (num_per_file[num_file]):
+                        path = random.choice(list_paths)
+                        rel_src.append(int_to_rel_input[j])
+                        rel_tgt.append(' '.join(path))
+                        
+                        path = random.choice(list_paths)
+                        rel_src.append(int_to_rel_input[j+1])
+                        rel_tgt.append(' '.join(inv_path(path)))
+                        
+                    list_paths = []
+            else:
+                with open(chemin_data + "list_paths/" + "rel_"+str(j) + '.pickle', 'rb') as g:
+                    list_paths = pickle.load(g)
+                for k in range (nb_paths_per_relation):
+                    path = random.choice(list_paths)
+                    rel_src.append(int_to_rel_input[j])
+                    rel_tgt.append(' '.join(path))
+                    
+                    path = random.choice(list_paths)
+                    rel_src.append(int_to_rel_input[j+1])
+                    rel_tgt.append(' '.join(inv_path(path)))
     
     
-    samples = [[r1, SEP_TOKEN] + r2.split(' ') for r1, r2 in zip(rel_src, rel_tgt)]
+    samples = [[r1, SEP_TOKEN, START_TOKEN] + r2.split(' ') + [END_TOKEN] for r1, r2 in zip(rel_src, rel_tgt)]
     
     with open(chemin_data + 'list_path.pickle', 'wb') as f:
-        pickle.dump(samples, f)
+        pickle.dump((samples, rel_src, rel_tgt), f)
 
 
 rel_vocab_size = len(rel_vocab)

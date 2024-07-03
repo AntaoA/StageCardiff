@@ -1,13 +1,28 @@
 from torch.utils.data import DataLoader
 from hyperopt import hp, fmin, tpe, rand, Trials, STATUS_OK
 from module_transformer import TextDataset, TextGen
-from transformer_import_data import rel_vocab_size, rel_to_int, samples
 from transformer_train import train
-import torch
 import torch.nn as nn
 import torch.optim as optim
-from transformer_param import SEQUENCE_LENGTH, device
+from transformer_param import SEQUENCE_LENGTH, device, chemin_data_train
 from transformer_validation import calculate_perplexity
+import os
+import pickle
+
+if os.path.exists(chemin_data_train + 'index.pickle'):
+    with open(chemin_data_train + 'index.pickle', 'rb') as f:
+        int_to_rel, rel_to_int, rel_vocab, vocab_input, rel_to_int_input, int_to_rel_input = pickle.load(f)
+else:
+    print("Error: missing data")
+
+rel_vocab_size = len(rel_vocab)
+
+if os.path.exists(chemin_data_train + 'list_path.pickle'):
+    with open(chemin_data_train + 'list_path.pickle', 'rb') as f:
+        samples = pickle.load(f)
+else:
+    print("Error: missing data")
+    
 
 # Espace de recherche des hyperparamètres
 space = {
@@ -44,7 +59,7 @@ def objective(params):
     train(model, int(params['epochs']), dataloader, criterion, optimizer)
     # Calculer la perte (ou une autre métrique) pour évaluer le modèle
     # Utiliser une simple moyenne de la perte d'entraînement pour cet exemple
-    perplexity, n_tokens = calculate_perplexity(model, dataset)
+    perplexity, n_tokens = calculate_perplexity(model)
     # Minimiser la perte moyenne
     return {'loss': perplexity, 'status': STATUS_OK}
 
