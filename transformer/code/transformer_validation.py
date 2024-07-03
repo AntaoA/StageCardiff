@@ -43,7 +43,7 @@ def calculate_perplexity(model):
     with torch.no_grad():
         
         for i,path_txt in enumerate(rel_tgt):
-            if i % 100 == 0:
+            if i % 1000 == 0:
                 print(f"{i} sur {len(rel_tgt)}")
             path = path_txt.split()
             int_list = [rel_to_int[rel_src[i]], rel_to_int[SEP_TOKEN]]
