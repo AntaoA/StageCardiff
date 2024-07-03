@@ -61,7 +61,7 @@ def calculate_perplexity(model):
                 total_tokens += 1
                 total_log_likelihood += log(prob)
 
-    return total_log_likelihood / total_tokens, total_tokens
+    return exp(-total_log_likelihood / total_tokens), total_tokens
 
 #log_likelihood, tokens = calculate_perplexity(model)
 #print(f"Perplexity: {exp(-log_likelihood)} -- Tokens: {tokens}") 
