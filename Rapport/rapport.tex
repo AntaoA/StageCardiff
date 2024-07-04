@@ -300,4 +300,16 @@ Autre technique, je vais arrêter de supprimer les list\_paths, juste les renomm
 Bon tout ça ça va être vraiment long. Surtout que je suis cencé avoir beaucoup de trials. Genre entre 100 et 500...\\
 Je vais lancer sur ARCAA entre aujourd'hui et demain. Ça va faire environ 60h de calculs. Je sais pas si c'est suffisant pour disons 200 trials.\\
 On verra demain.\\
+\section*{Jeudi 04-07 :}
+J'ai pas réussi à lancer sur ARCAA. J'avais d'abord une erreur pickle. J'ai virré le git clone et juste copié les fichiers, ça ne changeait rien donc j'ai virré le plus possible les pickle (tout ceux non nécessaire) et ça passait.\\
+Mais j'ai ensuite eu une erreur de taille de tensor. Et je suis rentré chez moi.\\
+Finalement j'ai pu corriger l'erreur ce matin (je dois juste avoir num\_head ou embed\_dim\_multiplier pair sinon ça crée un problème pour l'embedding).\\
+Donc ça tourne sur ARCAA, et plutôt pas mal (je peux suivre la progression vie le fichier output).\\
+Ok d'ailleurs j'ai découvert vsc, nano (qui est assez intuitif) mais je pense que vim peut aussi être avoir une plus value.\\
+J'ai donc commencer à regarder vimtutor.\\
+Pour l'instant sur les résultats de l'optimisation des hyperparamètres, je vois que ça marche vien (la perplexité baisse petit à petit). Ça prend sont temps mais bon du temps j'en ai avec ARCAA, je le ferais tourner en boucle pendant une semaine et on verra des résultats.\\
+Seul point de questionnement, je ne devrais pas re-changer mes données de validation à chaque fois, pour éviter que le modèle s'adapte à ces données ?\\
+Ou alors en prenant de grands jeux de données ça suffit (aka les 200 000 chemins pour la validation).\\
+Aussi autre intérogation : le jeu de validation sert uniquement pour l'optimisation des hyperparamètres, mais à quoi sert le jeu de test ?\\
+
 \end{document}
