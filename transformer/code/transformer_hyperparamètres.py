@@ -6,14 +6,10 @@ import torch.nn as nn
 import torch.optim as optim
 from transformer_param import SEQUENCE_LENGTH, device, chemin_data_train
 from transformer_validation import calculate_perplexity
+from transformer_import_data import rel_vocab, rel_to_int
 import os
 import pickle
 
-if os.path.exists(chemin_data_train + 'index.pickle'):
-    with open(chemin_data_train + 'index.pickle', 'rb') as f:
-        int_to_rel, rel_to_int, rel_vocab, vocab_input, rel_to_int_input, int_to_rel_input = pickle.load(f)
-else:
-    print("Error: missing data")
 
 rel_vocab_size = len(rel_vocab)
 
@@ -30,9 +26,12 @@ space = {
     'batch_size': hp.quniform('batch_size', 16, 128, 1),
     'num_layers': hp.quniform('num_layers', 1, 12, 1),
     'num_heads': hp.quniform('num_heads', 1, 16, 1),
-    'embed_dim_multiplier': hp.quniform('embed_dim', 1, 32, 1),
-    'learning_rate': hp.uniform('learning_rate', 0.0001, 0.01)
+    'embed_dim_multiplier': hp.quniform('embed_dim', 2, 32, 2),
+    'learning_rate': hp.uniform('learning_rate', 0.00001, 0.1)
 }
+
+
+
 def objective(params):
 
     params['embed_dim'] = params['embed_dim_multiplier'] * params['num_heads']
@@ -59,17 +58,17 @@ def objective(params):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=params['learning_rate'])
     # Entraînement
-    train(model, int(params['epochs']), dataloader, criterion, optimizer)
+    m, best_perplexity = train(model, int(params['epochs']), dataloader, criterion, optimizer, calculate_perplexity)
     # Calculer la perte (ou une autre métrique) pour évaluer le modèle
     # Utiliser une simple moyenne de la perte d'entraînement pour cet exemple
-    perplexity, n_tokens = calculate_perplexity(model)
+    print("Perplexity:", best_perplexity)
     # Minimiser la perte moyenne
-    return {'loss': perplexity, 'status': STATUS_OK}
+    return {'perplexity': best_perplexity, 'status': STATUS_OK}
 
 # Définir les essais pour stocker les résultats
 trials = Trials()
 
 # Exécuter l'optimisation
-best = fmin(fn=objective, space=space, algo=rand.suggest, max_evals=10, trials=trials)
+best = fmin(fn=objective, space=space, algo=tpe.suggest, max_evals=100, trials=trials)
 
 print("Best hyperparameters found:", best)
