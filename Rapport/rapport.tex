@@ -311,5 +311,18 @@ Pour l'instant sur les résultats de l'optimisation des hyperparamètres, je voi
 Seul point de questionnement, je ne devrais pas re-changer mes données de validation à chaque fois, pour éviter que le modèle s'adapte à ces données ?\\
 Ou alors en prenant de grands jeux de données ça suffit (aka les 200 000 chemins pour la validation).\\
 Aussi autre intérogation : le jeu de validation sert uniquement pour l'optimisation des hyperparamètres, mais à quoi sert le jeu de test ?\\
+Réunion avec Akash :\\
+Prendre le même nombre de relation par triplet plutôt que par relation.\\
+Faire la validation lors du training : une epoch, une évaluation, et je garde le meilleur modèle en format pth.\\
+Je jeu de test est que pour le rewiever, pas pour moi, et mon jeu de validation c'est sur le même graphes.\\
+Les hyperparamètres je les faits à la mains plutôt qu'avec la machine, elle est pas hyperintelligente.\\
+J'ai donc modifié l'importation des données pour avoir le bon jeux de validation et fixer le nombre de chemins que je veux par triplets.\\
+J'ai aussi insérer l'évaluation entre chaque epoch, comme mentionné.\\
+\section*{Vendredi 05-07 :}
+Ok ça à tourné toute la nuit pour ré-importer les données de training (k chemins par triplets), mais maintenant c'est fait !\\
+J'ai lancé du training avec évaluation pour voir si ça fonctionne bien et ça semble assez OK, juste deux trois problèmes à régler à la fin.\\
+Ça marche bien. Je regarde progressivement dans quel sens améliorer les paramètres.\\
+Ça prendra un peu de temps mais OK.\\
+J'ai aussi modifié en prévision le classifier pour avoir l'évaluation au milieu du training et prendre en compte les bonnes données pour la validation.\\
 
 \end{document}
