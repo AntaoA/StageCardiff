@@ -1,12 +1,15 @@
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
+import torch
 import os
 import pickle
 from module_transformer import TextDataset, TextGen
 from transformer_param import chemin_t, device, chemin_data_train
 from transformer_param import SEQUENCE_LENGTH, BATCH_SIZE, epochs, learning_rate, embed_dim, num_layers, num_heads
-
+from transformer_validation import calculate_perplexity
+import numpy as np
+import copy
 
 if os.path.exists(chemin_data_train + 'index.pickle'):
     with open(chemin_data_train + 'index.pickle', 'rb') as f:
@@ -31,9 +34,12 @@ dataloader = DataLoader(
 )
 
 # Training
-def train(model, epochs, dataloader, criterion, optimizer):
-    model.train()
+def train(model, epochs, dataloader, criterion, optimizer, calculate_perplexity):
+    best_perplexity = np.inf
+    best_model_wts = copy.deepcopy(model.state_dict())
+    somme = 0
     for epoch in range(epochs):
+        model.train()
         running_loss = 0
         k = 0
         for input_seq, target_seq, padding_mask in dataloader:
@@ -56,9 +62,28 @@ def train(model, epochs, dataloader, criterion, optimizer):
             loss.backward()
             optimizer.step()
             running_loss += loss.detach().cpu().numpy()
-            
+
         epoch_loss = running_loss / len(dataloader)
         print(f"Epoch {epoch} - loss: {epoch_loss:.3f}")
+        print()
+        # Phase d'évaluation
+        model.eval()
+        val_loss = 0.0
+        perplexity, _ = calculate_perplexity(model)
+        somme += perplexity
+        print(f"Perplexity: {perplexity}")
+        # Sauvegarde du modèle si la perplexité est la meilleure
+        if perplexity < best_perplexity:
+            best_perplexity = perplexity
+            best_model_wts = copy.deepcopy(model.state_dict())
+            torch.save(best_model_wts, 'transformer/code/best_model.pth')
+            print(f"Model saved with perplexity: {perplexity}")
+        print()
+    model.load_state_dict(torch.load('transformer/code/best_model.pth'))
+    print(f"Average perplexity : {somme/epochs}")
+    print(f'Best perplexity: {best_perplexity}')
+    return model, best_perplexity
+
 
 if os.path.exists(chemin_t + 'transformer.pickle'):
     with open(chemin_t + 'transformer.pickle', 'rb') as f:
@@ -81,5 +106,5 @@ else:
         p.numel() for p in model.parameters() if p.requires_grad)
     print(f"{total_trainable_params:,} training parameters.\n")
 
-    train(model, epochs, dataloader, criterion, optimizer) 
+    model, bp = train(model, epochs, dataloader, criterion, optimizer, calculate_perplexity) 
     open(chemin_t + 'transformer.pickle', 'wb').write(pickle.dumps(model))

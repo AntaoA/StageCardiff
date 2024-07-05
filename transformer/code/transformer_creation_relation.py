@@ -1,8 +1,14 @@
 import torch
-from transformer_import_data import rel_vocab, rel_to_int, int_to_rel
-from transformer_train import model
-from transformer_param import chemin_t_data, device, SEQUENCE_LENGTH, END_TOKEN
+from transformer_param import chemin_t_data, chemin_t, chemin_data_train, device, SEQUENCE_LENGTH, END_TOKEN
 import torch.nn.functional as F
+import pickle
+
+with open(chemin_t + 'transformer.pickle', 'rb') as f:
+    model = pickle.load(f)
+    model.to(device)
+
+with open(chemin_data_train + 'index.pickle', 'rb') as f:
+    int_to_rel, rel_to_int, rel_vocab, vocab_input, _, _ = pickle.load(f)
 
 def return_int_vector(text):
     words = text.split()
@@ -69,12 +75,11 @@ def text_generator_with_confidence(sentence, generate_length, k):
 
     
 with open(chemin_t_data + "nouvelles_relations.txt", "w") as f:
-    for r in rel_vocab:
-        if r[-6:] == "_input":
-            sentence = r + " <SEP> <START>"
-            out = text_generator_with_confidence(sentence, SEQUENCE_LENGTH, 5)
-            for i in range(len(out)):
-                path, p, pl = out[i]
-                f.write(f"{path} : {p} : {pl} \n")
+    for r in vocab_input:
+        sentence = r + " <SEP> <START>"
+        out = text_generator_with_confidence(sentence, SEQUENCE_LENGTH, 5)
+        for i in range(len(out)):
+            path, p, pl = out[i]
+            f.write(f"{path} : {p} : {pl} \n")
 
     
