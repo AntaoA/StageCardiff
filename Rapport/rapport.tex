@@ -153,7 +153,7 @@ Ok ça ne marchait pas vraiment. Je garde les probababilités en fonction de la 
 De plus j'ai stocker mes grosses données, le graphe de train, les index, dans des fichier.pickel.\\
 Ça semble fonctioner mais c'est vraiment hyper lent, surtout en mode débuggage.\\
 Ok j'ai trouver comment faire avec networkx. Je peut créer un générateur avec nx.all\_simpls\_paths puis prendre un chemin aléatoire (jepeux même limiter la taille).\\
-Réunion avec Stephan Schockaert.\\
+Réunion avec Steven Schockaert.\\
 C'est pas trop mal, ça avance. Là je fini avec mon transformer.\\
 Si je teste sur (h,r,t) il faut que j'empêche de prendre cette relation dans le chemin.\\
 De plus, il faut que j'empêche d'avoir un truc du style (n, r, n') suivit de (n', r-1, n) (mais si c'est une autre relation c'est ok et si les entités sont différentes c'est ok aussi).\\
@@ -252,7 +252,7 @@ C'est pas exactement une bonne mesure de la qualité du modèle, mais ça m'aide
 Ensuite il va falloir que je me penche sur ce que ça veux dire exactement d'utiliser les données de la validation.\\
 Pour mon test global, je trouve la bonne relation pour 87\% d'entre elles, et quand je trouve c'est en moyenne à la place 1.7.\\
 54\% la première place, 15\% la seconde, 9\% la troisième, 6\% la quatrième, 2\% la cinquième et 13\% en dehors du top 5.\\
-Réunion avec Stephan Schockaert.\\
+Réunion avec Steven Schock3aert.\\
 J'ai fais un peu de la merde : l'optimisation des hyperparamètres n'est pas correcte, je dois la faire sur le jeux de validation.\\
 Pour ça, je dois créer les chemins via les données de validations, et pour chaque chemin, calculer la probabilité qui arrive pour calculer la perplexité : $-\sum_i\log p_i$ si $p_i$ est la probabilité d'avoir la relation $r_i$, du chemin $r_1\ldots r_n$, en rentrant $r <SEP> r_1 \ldots r_{i-1}$.\\
 L'objectif est de minimiser cette perplexité.\\
@@ -324,5 +324,16 @@ J'ai lancé du training avec évaluation pour voir si ça fonctionne bien et ça
 Ça marche bien. Je regarde progressivement dans quel sens améliorer les paramètres.\\
 Ça prendra un peu de temps mais OK.\\
 J'ai aussi modifié en prévision le classifier pour avoir l'évaluation au milieu du training et prendre en compte les bonnes données pour la validation.\\
-
+Les prochaines étapes sont, je pense : finir d'optimiser les paramètres. Faire la même chose pour le classifier. Passer aux méthodes basées sur les règles.\\
+Réunion avec Steven Schockaert.\\
+Ça avance. Il va falloir faire tout ça sur ARCAA, mais c'est pas trop mal.\\
+J'ai trouver deux trois bug dans l'importation des données, c'est reparti pour les 150h...\\
+\section*{Lundi 08-07 :}
+J'ai lancer sur 20 chemins par triplets. C'est long mais ça marche mieux.\\
+Pour le nombre de têtes et de layers, ça bouge relativement à la marge.\\
+Je vais attendre que ça se finisse, lancer un 100 chemins par triplets, sur ARCAA, puis regarder les résultats avec le classifier.\\
+Vraissemblablement, à partir de 20 c'est ok, pas la peine de faire 100, on gagne quasiment rien.\\
+J'avais un soucis dans le calcul de la perplexité (je mettais pas le start et le end).\\
+J'ai regarder avec le classifier et ça donne un truc pas trop dégeu : 67\% en top 1 et seulement 15\% pas trouvé.\\
+Je vais regarder la perplexité sur le jeu de test.
 \end{document}
