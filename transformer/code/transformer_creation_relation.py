@@ -75,11 +75,14 @@ def text_generator_with_confidence(sentence, generate_length, k):
 
     
 with open(chemin_t_data + "nouvelles_relations.txt", "w") as f:
+    j = 0
     for r in vocab_input:
+        print(j)
+        j += 1
         sentence = r + " <SEP> <START>"
         out = text_generator_with_confidence(sentence, SEQUENCE_LENGTH, 5)
         for i in range(len(out)):
             path, p, pl = out[i]
             f.write(f"{path} : {p} : {pl} \n")
 
-    
+
