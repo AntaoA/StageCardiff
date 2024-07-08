@@ -4,7 +4,7 @@ import pickle
 import torch
 from torch.nn import functional as F
 from math import log, exp
-
+import random
 
 if os.path.exists(chemin_data_train + 'index.pickle'):
     with open(chemin_data_train + 'index.pickle', 'rb') as f:
@@ -28,21 +28,32 @@ else:
 
 
 
-def calculate_perplexity(model):
+def calculate_perplexity(model, rel_src=rel_src, rel_tgt=rel_tgt):
     model.eval()
     model.to(device)
 
     sum_prob = 0.0
     total_tokens = 0
 
+    # Obtenez 1000 indices aléatoires uniques
+    indices = random.sample(range(len(rel_src)), 1000)
+
+    # Sélectionnez les éléments correspondants dans les deux listes
+    src = [rel_src[i] for i in indices]
+    tgt = [rel_tgt[i] for i in indices]
+
+    
+    
     with torch.no_grad():
         
-        for i,path_txt in enumerate(rel_tgt):
+        for i,path_txt in enumerate(tgt):
             if i % 1000 == 0:
-                print(f"{i} sur {len(rel_tgt)}")
-            path = path_txt.split()
-            int_list = [rel_to_int[rel_src[i]], rel_to_int[SEP_TOKEN]]
-
+                print(f"{i} sur {len(tgt)}")
+            path = [START_TOKEN] + path_txt.split() + [END_TOKEN]
+            int_list = [rel_to_int[src[i]], rel_to_int[SEP_TOKEN]]
+            path_sum = 0
+            path_tok = 0
+            
             for j in range(len(path)-1):
                 model.eval()
                 int_list.append(rel_to_int[path[j]])
@@ -52,10 +63,13 @@ def calculate_perplexity(model):
                 
                 prob = F.softmax(predictions[:, -1, :], dim=-1)[0][rel_to_int[path[j+1]]].item()
                 
-                
+                path_sum += log(prob)
+                path_tok += 1
                 total_tokens += 1
                 sum_prob += log(prob)
 
+            if i % 100 == 0:
+                print(f"Path {i} -- Sum: {path_sum} -- Tokens: {path_tok} -- Perp: {exp(-path_sum / path_tok)}")
     return exp(-sum_prob / total_tokens), total_tokens
 
 
