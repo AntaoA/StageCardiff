@@ -14,6 +14,8 @@ num_heads=2
 chemin_data = "grail-master/data/fb237_v4/"
 chemin_data_train = "grail-master/data/fb237_v4/train/"
 chemin_data_validation = "grail-master/data/fb237_v4/validation/"
+chemin_data_test = "grail-master/data/fb237_v4_ind/test/"
+
 
 chemin_t_data = "transformer/data/"
 nb_paths_per_triplet = 20

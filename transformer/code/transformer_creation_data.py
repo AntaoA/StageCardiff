@@ -5,6 +5,8 @@ from transformer_param import START_TOKEN, END_TOKEN, PAD_TOKEN, SEP_TOKEN
 from transformer_param import chemin_t_data
 from transformer_param import chemin_data, chemin_data_train as chemin
 
+#chemin_data = "grail-master/data/fb237_v4_ind/"
+
 # Dataset Preparation
 if os.path.exists(chemin + 'index.pickle'):
     with open(chemin + 'index.pickle', 'rb') as f:
@@ -66,7 +68,7 @@ else:
     
     triplet_from_rel = [[] for _ in range(len(vocab_input))]
         
-    chemin_donnee = chemin_data + 'train.txt' if chemin[-3::] == "in/" else chemin_data + 'valid.txt'    
+    chemin_donnee = chemin_data + 'train.txt' if chemin[-3::] == "in/" else (chemin_data + 'valid.txt' if chemin[-3::] == "on/" else chemin_data + 'test.txt')    
     
     with open(chemin_donnee, 'r') as file:
         for line in file:
