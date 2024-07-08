@@ -1,0 +1,6 @@
+trouve en 1 : 272 : (0.68) : prob moyenne 0.9245712673839401 
+trouvé en 2 : 27 : (0.0675) : prob moyenne 0.2828478397870505 
+trouvé en 3 : 17 : (0.0425) : prob moyenne 0.1322444217169986 
+trouvé en 4 : 14 : (0.035) : prob moyenne 0.10281677091760295 
+trouvé en 5 : 9 : (0.0225) : porb moyenne 0.05548466100460953 
+pas trouvé : 61 : (0.1525) 
