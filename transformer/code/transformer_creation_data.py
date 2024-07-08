@@ -32,8 +32,8 @@ else:
         rel_vocab.append(line + '-1')
         rel_vocab.append(line + '-1_input')
 
-        vocab_input.append(line + '-1_input')
         vocab_input.append(line + '_input')
+        vocab_input.append(line + '-1_input')
 
     int_to_rel = {k:v.strip() for k,v in enumerate(rel_vocab)}
     rel_to_int = {v.strip():k for k,v in enumerate(rel_vocab)}
@@ -63,26 +63,32 @@ if os.path.exists(chemin + 'graphe_train.pickle'):
     with open(chemin + 'graphe_train.pickle', 'rb') as f:
         G, triplet_from_rel = pickle.load(f)
 else:
-    G = nx.MultiDiGraph()
     
     triplet_from_rel = [[] for _ in range(len(vocab_input))]
         
     chemin_donnee = chemin_data + 'train.txt' if chemin[-3::] == "in/" else chemin_data + 'valid.txt'    
     
-    # Ajout des noeuds et des arêtes au graphe    
     with open(chemin_donnee, 'r') as file:
         for line in file:
             n1, r, n2 = line.strip().split('\t')
-            G.add_node(n1)
-            G.add_node(n2)
-            G.add_edge(n1, n2, relation = r)
-            G.add_edge(n2, n1, relation = r + '-1')
-            
             triplet_from_rel[rel_to_int_input[r + '_input']] += [(n1, n2)]
             triplet_from_rel[rel_to_int_input[r + '-1_input']] += [(n2, n1)]
 
     for i in range(len(vocab_input)):
         print(f"voc {i} : {len(triplet_from_rel[i])} triplets")
+    
+    
+    G = nx.MultiDiGraph()
+    with open(chemin + "unique_nodes.txt", 'r') as file:
+        for line in file:
+            G.add_node(line.strip())
+    
+    for i in range(len(vocab_input)):
+        for n1, n2 in triplet_from_rel[i]:
+            G.add_edge(n1, n2, relation=int_to_rel_input[i][:-6])
+                       
+
+    
     
     somme_triplet = 0
     somme_path = 0
@@ -95,6 +101,8 @@ else:
                     directory = chemin + "list_paths/" + "rel_"+str(i) + "/"
                     os.makedirs(directory, exist_ok=True)
                     name_file = directory + "triplet_" + str(m) + '.pickle'
+                    if m % 10 == 0:
+                        print(m)
                     m += 1
                     if not os.path.exists(name_file):
                         paths = list(nx.all_simple_paths(G, n1, n2, cutoff=4))
@@ -109,7 +117,7 @@ else:
                                     last_rel = p[-1] if len(p)>0 else last_rel
                                     for r in d:
                                         new_p = p + [d[r]['relation']]
-                                        if d[r]['relation'] == last_rel and path[j] == n2 and path[j+1] == n1:
+                                        if d[r]['relation'] == last_rel and path[j] == n1 and path[j+1] == n2:
                                             continue
                                         if j < 1 or path[j-1] != path[j+1] or inv(d[r]['relation'] != last_rel):
                                             new_path_rel.append(new_p)
@@ -144,7 +152,7 @@ else:
                                 last_rel = p[-1] if len(p)>0 else last_rel
                                 for r in d:
                                     new_p = p + [d[r]['relation']]
-                                    if d[r]['relation'] == last_rel and path[j] == n2 and path[j+1] == n1:
+                                    if d[r]['relation'] == last_rel and path[j] == n1 and path[j+1] == n2:
                                         continue
                                     if j < 1 or path[j-1] != path[j+1] or inv(d[r]['relation'] != last_rel):
                                         new_path_rel.append(new_p)

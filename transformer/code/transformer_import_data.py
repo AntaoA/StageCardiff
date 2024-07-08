@@ -5,7 +5,7 @@ import os
 import pickle
 from transformer_param import START_TOKEN, END_TOKEN, PAD_TOKEN, SEP_TOKEN, SEQUENCE_LENGTH
 from transformer_param import chemin_t_data, nb_paths_per_triplet
-from transformer_param import chemin_data, chemin_data_validation as chemin
+from transformer_param import chemin_data, chemin_data_train as chemin
 import transformer_param as tp
 
 # Dataset Preparation
@@ -74,6 +74,8 @@ else:
                     with open(chemin + "list_paths/" + "rel_"+str(j) + '/triplet_' + str(i) + '.pickle', 'rb') as g:
                         list_paths = pickle.load(g)
                     for k in range(nb_paths_per_triplet):
+                        if list_paths == []:
+                            break
                         p = random.choice(list_paths)
                         rel_src.append(int_to_rel_input[j])
                         rel_tgt.append(' '.join(p))
@@ -85,7 +87,7 @@ else:
                     
         samples = [[r1, SEP_TOKEN, START_TOKEN] + r2.split(' ') + [END_TOKEN] + [PAD_TOKEN] * (SEQUENCE_LENGTH - 4 - len(r2.split(' '))) for r1, r2 in zip(rel_src, rel_tgt)]
         
-        with open(chemin + 'list_path.pickle', 'wb') as f:
+        with open(chemin + 'list_path_1.pickle', 'wb') as f:
             pickle.dump((samples, rel_src, rel_tgt), f)
         
 
