@@ -15,7 +15,7 @@ if os.path.exists(chemin_data_train + 'index.pickle'):
     with open(chemin_data_train + 'index.pickle', 'rb') as f:
         int_to_rel, rel_to_int, rel_vocab, vocab_input, rel_to_int_input, int_to_rel_input = pickle.load(f)
 else:
-    print("Error: missing data")
+    print("eor: missing data")
 
 rel_vocab_size = len(rel_vocab)
 
