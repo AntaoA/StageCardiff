@@ -1,6 +1,7 @@
-trouve en 1 : 272 : (0.68) : prob moyenne 0.9245712673839401 
-trouvé en 2 : 27 : (0.0675) : prob moyenne 0.2828478397870505 
-trouvé en 3 : 17 : (0.0425) : prob moyenne 0.1322444217169986 
-trouvé en 4 : 14 : (0.035) : prob moyenne 0.10281677091760295 
-trouvé en 5 : 9 : (0.0225) : porb moyenne 0.05548466100460953 
-pas trouvé : 61 : (0.1525) 
+trouve en 1 : 926 : (0.5279361459521095) : prob moyenne 0.8042067493318096 
+trouvé en 2 : 243 : (0.13854047890535917) : prob moyenne 0.233432830591138 
+trouvé en 3 : 116 : (0.0661345496009122) : prob moyenne 0.14299628882998086 
+trouvé en 4 : 62 : (0.03534777651083238) : prob moyenne 0.0779171795208728 
+trouvé en 5 : 43 : (0.02451539338654504) : porb moyenne 0.04863942333302179 
+pas trouvé : 364 : (0.20752565564424175) 
+

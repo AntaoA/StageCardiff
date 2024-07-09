@@ -5,7 +5,7 @@ import torch
 import os
 import pickle
 from module_transformer import TextDataset, TextGen
-from transformer_param import chemin_t, device, chemin_data_train
+from transformer_param import chemin_t, device, chemin_data_train, name_transformer
 from transformer_param import SEQUENCE_LENGTH, BATCH_SIZE, epochs, learning_rate, embed_dim, num_layers, num_heads
 from transformer_validation import calculate_perplexity
 import numpy as np
@@ -19,8 +19,8 @@ else:
 
 rel_vocab_size = len(rel_vocab)
 
-if os.path.exists(chemin_data_train + 'list_path.pickle'):
-    with open(chemin_data_train + 'list_path.pickle', 'rb') as f:
+if os.path.exists(chemin_data_train + 'list_path_10.pickle'):
+    with open(chemin_data_train + 'list_path_10.pickle', 'rb') as f:
         samples, rel_src, rel_tgt = pickle.load(f)
 else:
     print("Error: missing data")
@@ -85,8 +85,8 @@ def train(model, epochs, dataloader, criterion, optimizer, calculate_perplexity)
     return model, best_perplexity
 
 
-if os.path.exists(chemin_t + 'transformer.pickle'):
-    with open(chemin_t + 'transformer.pickle', 'rb') as f:
+if os.path.exists(chemin_t + name_transformer):
+    with open(chemin_t + name_transformer, 'rb') as f:
         model = pickle.load(f)
 else:
     model = TextGen(
@@ -106,5 +106,7 @@ else:
         p.numel() for p in model.parameters() if p.requires_grad)
     print(f"{total_trainable_params:,} training parameters.\n")
 
+#    model.load_state_dict(torch.load('transformer/code/best_model_5-12-avec-10-l4.pth'))
     model, bp = train(model, epochs, dataloader, criterion, optimizer, calculate_perplexity) 
+
     open(chemin_t + 'transformer.pickle', 'wb').write(pickle.dumps(model))

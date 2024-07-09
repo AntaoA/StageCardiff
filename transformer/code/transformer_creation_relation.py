@@ -3,7 +3,7 @@ from transformer_param import chemin_t_data, chemin_t, chemin_data_train, device
 import torch.nn.functional as F
 import pickle
 
-with open(chemin_t + 'transformer.pickle', 'rb') as f:
+with open(chemin_t + 'transformer_5-12.pickle', 'rb') as f:
     model = pickle.load(f)
     model.to(device)
 
@@ -69,8 +69,8 @@ def text_generator_with_confidence(sentence, generate_length, k):
         # Order all candidates by their probability scores
         ordered = sorted(all_candidates, key=lambda x: x[1], reverse=True)
         # Select the k best candidates
-        samples = ordered[:k]    
-        
+        samples = ordered[:k]
+
     return samples
 
     

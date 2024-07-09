@@ -18,8 +18,8 @@ if os.path.exists(chemin_data_train + 'index.pickle'):
 
 rel_vocab_size = len(rel_vocab)
 
-if os.path.exists(chemin_data_train + 'list_path_20.pickle'):
-    with open(chemin_data_train + 'list_path_20.pickle', 'rb') as f:
+if os.path.exists(chemin_data_train + 'list_path_10.pickle'):
+    with open(chemin_data_train + 'list_path_10.pickle', 'rb') as f:
         samples, rel_src, rel_tgt = pickle.load(f)
 
 if os.path.exists(chemin_data_validation + 'index.pickle'):
@@ -111,7 +111,7 @@ else:
         p.numel() for p in model.parameters() if p.requires_grad)
     print(f"{total_trainable_params:,} training parameters.\n")
 
-    train(model, epochs, dataloader, criterion, optimizer, calculate_perplexity) 
+    model,_ = train(model, epochs, dataloader, criterion, optimizer, calculate_perplexity) 
     open(chemin_t + 'classifier.pickle', 'wb').write(pickle.dumps(model))
 
 def return_int_vector(text):
@@ -199,7 +199,7 @@ rel_tgt = []
 
 for line in lines:
     pred, prob, prob_l = line.strip().decode('utf-8').split(":")
-    if float(prob) > 0.05:
+    if float(prob) > 0.01:
         prediction = pred.split()
         rel_src.append(prediction[2:])
         rel_tgt.append(prediction[0])
@@ -214,28 +214,32 @@ with open(chemin_t_data + "classification_path.txt", "w") as f:
                 
 with open(chemin_t_data + "récap_classifier.txt", "w") as f:
     with open(chemin_t_data + "classification_path.txt", "r") as g:
-        lines = g.readlines()  
-        i = 0
-        j = 0
-        trouve = False
-        while True:
-            line = lines[i]
-            src, tgt, pred, prob = line.strip().split(" : ")
-            if tgt == pred:
-                f.write(f"{src} : {tgt} : {prob} : {j+1} \n")
-                trouve = True
-                print(f"trouve en {j+1}")    
-            j += 1
-            if j == 5:
-                if not trouve:
-                    f.write(f"{src} : {tgt} : {prob} : pas trouvé \n")
-                    print(f"pas trouve")
-                trouve = False
-                j = 0
-            if i == len(lines) - 1:
-                break
-            i += 1
-            
+        with open(chemin_t_data + "chemin_to_relation.txt", "w") as h:
+            lines = g.readlines()  
+            i = 0
+            j = 0
+            trouve = False
+            while True:
+                line = lines[i]
+                src, tgt, pred, prob = line.strip().split(" : ")
+                if tgt == pred:
+                    if j < 3:
+                        h.write(f"{src} : {tgt} : {prob}\n")
+                    
+                    f.write(f"{src} : {tgt} : {prob} : {j+1} \n")
+                    trouve = True
+                    print(f"trouve en {j+1}")    
+                j += 1
+                if j == 5:
+                    if not trouve:
+                        f.write(f"{src} : {tgt} : {prob} : pas trouvé \n")
+                        print(f"pas trouve")
+                    trouve = False
+                    j = 0
+                if i == len(lines) - 1:
+                    break
+                i += 1
+                
 with open(chemin_t_data + "stats_classifier.txt", 'w') as f:
     with open(chemin_t_data + "récap_classifier.txt", 'r') as g:
         nb_1 = 0

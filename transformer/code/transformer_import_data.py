@@ -5,10 +5,10 @@ import os
 import pickle
 from transformer_param import START_TOKEN, END_TOKEN, PAD_TOKEN, SEP_TOKEN, SEQUENCE_LENGTH
 from transformer_param import chemin_t_data, nb_paths_per_triplet
-from transformer_param import chemin_data, chemin_data_test as chemin
+from transformer_param import chemin_data, chemin_data_train as chemin
 import transformer_param as tp
 
-chemin_data = "grail-master/data/fb237_v4_ind/"
+#chemin_data = "grail-master/data/fb237_v4_ind/"
 
 # Dataset Preparation
 if os.path.exists(chemin + 'index.pickle'):
@@ -51,7 +51,7 @@ else:
         for j in range(len(vocab_input)):
             print(f"Relation {j}")
             if j % 2 == 0:
-                list_paths = []            
+                list_paths = []     
                 i = 0
                 while os.path.exists(chemin + "list_paths/" + "rel_"+str(j) + '/triplet_' + str(i) + '.pickle'):
                     with open(chemin + "list_paths/" + "rel_"+str(j) + '/triplet_' + str(i) + '.pickle', 'rb') as g:
@@ -69,10 +69,9 @@ else:
                     i += 1
                     
         samples = [[r1, SEP_TOKEN, START_TOKEN] + r2.split(' ') + [END_TOKEN] + [PAD_TOKEN] * (SEQUENCE_LENGTH - 4 - len(r2.split(' '))) for r1, r2 in zip(rel_src, rel_tgt)]
-        
-        with open(chemin + 'list_path_1.pickle', 'wb') as f:
+
+        with open(chemin + 'list_path_10.pickle', 'wb') as f:
             pickle.dump((samples, rel_src, rel_tgt), f)
-        
     else:
         for j in range(len(vocab_input)):
             print(f"Relation {j}")
