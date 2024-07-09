@@ -337,4 +337,23 @@ J'avais un soucis dans le calcul de la perplexité (je mettais pas le start et l
 J'ai regarder avec le classifier et ça donne un truc pas trop dégeu : 67\% en top 1 et seulement 15\% pas trouvé.\\
 Je vais regarder la perplexité sur le jeu de test.\\
 Ça me donne une perplexité ok je pense (8.7 contre 5.3 au mieux).\\
+\section*{Mardi 09-07 :}
+Je teste les derniers hyperparamètres.\\
+Leraning rate : $0.01$ ne convient pas, $0.0001$ est légèrement moins bien que $0.001$, je   teste entre les deux.\\
+$0.005$ semble prometteur sur la première epoch.\\  
+Entre les deux, ça teste $0.0075$. J'obtient (pour le moment) du $5.24$, ce qui est mieux que tout le reste !\\
+Je regarde aussi avec $30$ chemins et avec $10$ chemins.\\
+$30$ chemins ça n'améliore pas à priori (avec les mêmes paramètres en tout cas).\\
+Je regarde pour $10$.\\
+Ça marche bien, avec un LR de $0.0075$ j'obtiens encore une fois un $5.24$ !\\
+Ce soir je lancerais une recherche random d'hyperparamètre, en prenant en compte le nombre de chemins, je pense.\\
+Je modifie un peu les layers. Avec $4$ j'obtiens (pour le moment) une perplexité de $5.12$.\\
+J'en ai aussi profité pour regarder sur les données de test.\\
+$2$ layers, $2$ head, $0.0075$ LR, $10$ chemins, donne une perplexité de $10.26$. Pas sûr que ça soit ouffissime.\\
+$4$ layers, $2$ head, $0.0075$ LR, $10$ chemins, donne une perplexité de $9.02$.\\
+Maintenant, faudrait voir ce que je fait. À priori il faut ajoute tout plein de relation, puisque c'était le but pour pouvoir faire une méthode basé sur les règles plus efficacement.\\
+Faut-il sortir les $X$ chemins les plus probable par relation, pondérer (voir comment) avec le classifier, puis regarder chaque triplet et faire tourner les proba.\\
+Faut aussi faire gaffe si le chemin est déjà présent.\\
+À priori ça rajouterait pas mal de relation, mais je ne sais pas si ça sera assez. Peut être ajouter plusieurs relation par triplet, je ne sais pas.\\
+Et après ça sera ouvert pour les règles.
 \end{document}
