@@ -11,6 +11,8 @@ from transformer_validation import calculate_perplexity
 import numpy as np
 import copy
 
+name_transformer = "transformer.pickle"
+
 if os.path.exists(chemin_data_train + 'index.pickle'):
     with open(chemin_data_train + 'index.pickle', 'rb') as f:
         int_to_rel, rel_to_int, rel_vocab, vocab_input, rel_to_int_input, int_to_rel_input = pickle.load(f)
