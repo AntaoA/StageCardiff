@@ -1,4 +1,5 @@
 /american_football/football_team/current_roster./sports/sports_team_roster/position
+/award/award_category/category_of
 /award/award_category/disciplines_or_subjects
 /award/award_category/nominees./award/award_nomination/nominated_for
 /award/award_category/winners./award/award_honor/award_winner
@@ -13,6 +14,7 @@
 /award/award_winning_work/awards_won./award/award_honor/award
 /award/award_winning_work/awards_won./award/award_honor/award_winner
 /award/award_winning_work/awards_won./award/award_honor/honored_for
+/award/hall_of_fame/inductees./award/hall_of_fame_induction/inductee
 /award/ranked_item/appears_in_ranked_lists./award/ranking/list
 /base/aareas/schema/administrative_area/administrative_parent
 /base/aareas/schema/administrative_area/capital
@@ -36,7 +38,11 @@
 /base/schemastaging/organization_extra/phone_number./base/schemastaging/phone_sandbox/service_location
 /base/schemastaging/person_extra/net_worth./measurement_unit/dated_money_value/currency
 /base/x2010fifaworldcupsouthafrica/world_cup_squad/current_world_cup_squad./base/x2010fifaworldcupsouthafrica/current_world_cup_squad/current_club
+/broadcast/content/artist
+/business/business_operation/assets./measurement_unit/dated_money_value/currency
 /business/business_operation/industry
+/business/business_operation/operating_income./measurement_unit/dated_money_value/currency
+/business/business_operation/revenue./measurement_unit/dated_money_value/currency
 /business/job_title/people_with_this_title./business/employment_tenure/company
 /celebrities/celebrity/celebrity_friends./celebrities/friendship/friend
 /celebrities/celebrity/sexual_relationships./celebrities/romantic_relationship/celebrity
@@ -54,6 +60,7 @@
 /education/university/fraternities_and_sororities
 /education/university/international_tuition./measurement_unit/dated_money_value/currency
 /education/university/local_tuition./measurement_unit/dated_money_value/currency
+/film/actor/dubbing_performances./film/dubbing_performance/language
 /film/actor/film./film/performance/film
 /film/director/film
 /film/film/cinematography
@@ -69,6 +76,7 @@
 /film/film/featured_film_locations
 /film/film/film_art_direction_by
 /film/film/film_festivals
+/film/film/film_format
 /film/film/film_production_design_by
 /film/film/genre
 /film/film/language
@@ -87,6 +95,7 @@
 /film/film/story_by
 /film/film_subject/films
 /film/film/written_by
+/film/person_or_entity_appearing_in_film/films./film/personal_film_appearance/type_of_appearance
 /food/food/nutrients./food/nutrition_fact/nutrient
 /government/government_office_category/officeholders./government/government_position_held/jurisdiction_of_office
 /government/legislative_session/members./government/government_position_held/district_represented
@@ -111,8 +120,13 @@
 /location/location/contains
 /location/location/partially_contains
 /location/location/time_zones
+/location/statistical_region/gdp_nominal./measurement_unit/dated_money_value/currency
+/location/statistical_region/gdp_nominal_per_capita./measurement_unit/dated_money_value/currency
+/location/statistical_region/gdp_real./measurement_unit/adjusted_money_value/adjustment_currency
+/location/statistical_region/gni_per_capita_in_ppp_dollars./measurement_unit/dated_money_value/currency
 /location/statistical_region/places_exported_to./location/imports_and_exports/exported_to
 /location/statistical_region/religions./location/religion_percentage/religion
+/location/statistical_region/rent50_2./measurement_unit/dated_money_value/currency
 /location/us_county/county_seat
 /media_common/netflix_genre/titles
 /medicine/disease/notable_people_with_this_condition
@@ -134,12 +148,14 @@
 /music/performance_role/regular_performances./music/group_membership/role
 /music/performance_role/track_performances./music/track_contribution/role
 /music/record_label/artist
+/olympics/olympic_games/participating_countries
 /olympics/olympic_games/sports
 /olympics/olympic_participating_country/athletes./olympics/olympic_athlete_affiliation/olympics
 /olympics/olympic_participating_country/medals_won./olympics/olympic_medal_honor/olympics
 /olympics/olympic_sport/athletes./olympics/olympic_athlete_affiliation/country
 /olympics/olympic_sport/athletes./olympics/olympic_athlete_affiliation/olympics
 /organization/endowed_organization/endowment./measurement_unit/dated_money_value/currency
+/organization/non_profit_organization/registered_with./organization/non_profit_registration/registering_agency
 /organization/organization/child./organization/organization_relationship/child
 /organization/organization_founder/organizations_founded
 /organization/organization/headquarters./location/mailing_address/citytown
@@ -168,12 +184,15 @@
 /people/person/spouse_s./people/marriage/type_of_union
 /people/profession/specialization_of
 /soccer/football_player/current_team./sports/sports_team_roster/team
+/soccer/football_team/current_roster./soccer/football_roster_position/position
+/soccer/football_team/current_roster./sports/sports_team_roster/position
 /sports/pro_athlete/teams./sports/sports_team_roster/team
 /sports/professional_sports_team/draft_picks./sports/sports_league_draft_pick/draft
 /sports/professional_sports_team/draft_picks./sports/sports_league_draft_pick/school
 /sports/sport/pro_athletes./sports/pro_sports_played/athlete
 /sports/sports_league_draft/picks./sports/sports_league_draft_pick/school
 /sports/sports_league/teams./sports/sports_league_participation/team
+/sports/sports_position/players./sports/sports_team_roster/position
 /sports/sports_position/players./sports/sports_team_roster/team
 /sports/sports_team/colors
 /sports/sports_team_location/teams
