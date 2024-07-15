@@ -36,7 +36,7 @@ def generate_square_subsequent_mask(sz):
 
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, max_len, d_model, dropout=0.1):
+    def __init__(self, max_len, d_model, dropout):
         """
         :param max_len: Input length sequence.
         :param d_model: Embedding dimension.
@@ -63,9 +63,9 @@ class PositionalEncoding(nn.Module):
         return self.dropout(x)
     
 class TextGen(nn.Module):
-    def __init__(self, vocab_size, embed_dim, num_layers, num_heads, sequence_length):
+    def __init__(self, vocab_size, embed_dim, num_layers, num_heads, sequence_length, dropout):
         super(TextGen, self).__init__()
-        self.pos_encoder = PositionalEncoding(max_len=sequence_length, d_model=embed_dim)
+        self.pos_encoder = PositionalEncoding(max_len=sequence_length, d_model=embed_dim, dropout=dropout)
         self.emb = nn.Embedding(vocab_size, embed_dim)
         self.decoder_layer = nn.TransformerDecoderLayer(
             d_model=embed_dim, 
@@ -77,7 +77,7 @@ class TextGen(nn.Module):
             num_layers=num_layers,
         )
         self.linear = nn.Linear(embed_dim, vocab_size)
-        self.dropout = nn.Dropout(0.2)
+        self.dropout = nn.Dropout(dropout)
         
     # Positional encoding is required. Else the model does not learn.
 

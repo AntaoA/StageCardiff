@@ -6,28 +6,36 @@ import torch.nn as nn
 import torch.optim as optim
 from transformer_param import SEQUENCE_LENGTH, device, chemin_data_train
 from transformer_validation import calculate_perplexity
-from transformer_import_data import rel_vocab, rel_to_int
 import os
 import pickle
 
 
-rel_vocab_size = len(rel_vocab)
 
-if os.path.exists(chemin_data_train + 'list_path.pickle'):
-    with open(chemin_data_train + 'list_path.pickle', 'rb') as f:
-        samples, _, _ = pickle.load(f)
+# Dataset Preparation
+if os.path.exists(chemin_data_train + 'index.pickle'):
+    with open(chemin_data_train + 'index.pickle', 'rb') as f:
+        _, rel_to_int, rel_vocab, _, _, _ = pickle.load(f)
 else:
     print("Error: missing data")
+
+rel_vocab_size = len(rel_vocab)
+
+if os.path.exists(chemin_data_train + 'list_path_10.pickle'):
+    with open(chemin_data_train + 'list_path_10.pickle', 'rb') as f:
+        samples, _, _ = pickle.load(f)
+else:
+    print("Error: missing data")    
     
 
 # Espace de recherche des hyperparamètres
 space = {
-    'epochs': hp.quniform('epochs', 10, 100, 1),
+    'epochs': hp.quniform('epochs', 5, 20, 1),
     'batch_size': hp.quniform('batch_size', 16, 128, 1),
     'num_layers': hp.quniform('num_layers', 1, 12, 1),
     'num_heads': hp.quniform('num_heads', 1, 16, 1),
     'embed_dim_multiplier': hp.quniform('embed_dim', 2, 32, 2),
-    'learning_rate': hp.uniform('learning_rate', 0.00001, 0.1)
+    'learning_rate': hp.uniform('learning_rate', 0.00001, 0.1),
+    'dropout': hp.uniform('dropout', 0.1, 0.5)
 }
 
 
@@ -51,7 +59,8 @@ def objective(params):
         embed_dim=int(params['embed_dim']),
         num_layers=int(params['num_layers']), 
         num_heads=int(params['num_heads']),
-        sequence_length=SEQUENCE_LENGTH
+        sequence_length=SEQUENCE_LENGTH,
+        dropout=float(params['dropout'])
     ).to(device)
     
     # Définir le critère et l'optimisateur
@@ -63,7 +72,7 @@ def objective(params):
     # Utiliser une simple moyenne de la perte d'entraînement pour cet exemple
     print("Perplexity:", best_perplexity)
     # Minimiser la perte moyenne
-    return {'perplexity': best_perplexity, 'status': STATUS_OK}
+    return {'loss': best_perplexity, 'status': STATUS_OK}
 
 # Définir les essais pour stocker les résultats
 trials = Trials()

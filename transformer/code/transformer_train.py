@@ -6,7 +6,7 @@ import os
 import pickle
 from module_transformer import TextDataset, TextGen
 from transformer_param import chemin_t, device, chemin_data_train, name_transformer
-from transformer_param import SEQUENCE_LENGTH, BATCH_SIZE, epochs, learning_rate, embed_dim, num_layers, num_heads
+from transformer_param import SEQUENCE_LENGTH, BATCH_SIZE, epochs, learning_rate, embed_dim, num_layers, num_heads, dropout
 from transformer_validation import calculate_perplexity
 import numpy as np
 import copy
@@ -96,7 +96,8 @@ else:
         embed_dim=embed_dim,
         num_layers=num_layers, 
         num_heads=num_heads,
-        sequence_length=SEQUENCE_LENGTH
+        sequence_length=SEQUENCE_LENGTH,
+        dropout=dropout
     ).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)

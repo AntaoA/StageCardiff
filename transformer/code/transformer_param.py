@@ -8,8 +8,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 epochs = 20
 learning_rate = 0.00075
 embed_dim=100
-num_layers=2
-num_heads=4
+num_layers=4
+num_heads=2
+dropout=0.3
+n_gram = 4
+hidden_dim = 100
 
 chemin_data = "grail-master/data/fb237_v4/"
 chemin_data_train = "grail-master/data/fb237_v4/train/"

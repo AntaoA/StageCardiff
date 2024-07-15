@@ -3,9 +3,9 @@ import os
 import pickle
 from transformer_param import START_TOKEN, END_TOKEN, PAD_TOKEN, SEP_TOKEN
 from transformer_param import chemin_t_data
-from transformer_param import chemin_data, chemin_data_train as chemin
+from transformer_param import chemin_data, chemin_data_test as chemin
 
-#chemin_data = "grail-master/data/fb237_v4_ind/"
+chemin_data = "grail-master/data/fb237_v4_ind/"
 
 # Dataset Preparation
 if os.path.exists(chemin + 'index.pickle'):
