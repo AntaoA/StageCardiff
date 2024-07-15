@@ -356,4 +356,20 @@ Faut-il sortir les $X$ chemins les plus probable par relation, pondérer (voir c
 Faut aussi faire gaffe si le chemin est déjà présent.\\
 À priori ça rajouterait pas mal de relation, mais je ne sais pas si ça sera assez. Peut être ajouter plusieurs relation par triplet, je ne sais pas.\\
 Et après ça sera ouvert pour les règles.
-\end{document}
+\section*{Mercredi 10-07 :}
+Choix et ajout des nouvelles relations en utilisant les chemins. Long. Il y en a vraiment beaucoup !
+Discussion avec Akash.\\
+En fait il faut comparer avec LSTM et N-gram pour avoir une point intéressant à dire. Développer pourquoi on a utiliser les transformers.\\
+\section*{Jeudi 11-07 :}
+Implémentation du LSTM, hyperparamètres, ça marche assez bien (juste un petit bug à corriger).\\
+Implémentation du N-gram, toujours des erreurs, notamment avec les masques car la taille des input et celle des outputs n'est pas la même.
+\section*{Vendredi 12-07 :}
+Réunion avec Steven Schockaert :
+Pas trop mal.
+Il peut être intéressant de regarder le fine tuning, et potentiellement augmenter à des chemins de taille 6 pour vior la différence.\\
+\\
+J'ai terminer d'implémenter le N-gram, ça marche pas si mal, moins bien que les deux autres boug mais pas si mal !\\
+L'hyperparamètrage est lancé.\\
+Le bug résolu (le "loss" est important en fait).\\
+Les trois vont tourner en continu sur mon PC ce week-end, on va bien se marrer.
+\end{document} 
