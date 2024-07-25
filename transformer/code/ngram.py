@@ -4,8 +4,8 @@ from torch.utils.data import DataLoader
 import torch
 import os
 import pickle
-from transformer_param import chemin_t, device, chemin_data_train, name_transformer, chemin_data_validation, START_TOKEN, END_TOKEN, SEP_TOKEN
-from transformer_param import SEQUENCE_LENGTH, BATCH_SIZE, epochs, learning_rate, embed_dim, num_layers, num_heads, n_gram, hidden_dim
+from ngram_param import chemin_t, device, chemin_data_train, chemin_data_validation, START_TOKEN, END_TOKEN, SEP_TOKEN
+from ngram_param import SEQUENCE_LENGTH, BATCH_SIZE, epochs, learning_rate, embed_dim, n_gram, hidden_dim
 import numpy as np
 import copy
 import random
@@ -59,16 +59,17 @@ def calculate_perplexity(model):
     total_tokens = 0
 
     # Obtenez 1000 indices aléatoires uniques   
-    indices = random.sample(range(len(rel_src_v)), 1000)
+    # indices = random.sample(range(len(rel_src_v)), 1000)
+    indices = range(len(rel_src_v))
 
     # Sélectionnez les éléments correspondants dans les deux listes
     src = [rel_src_v[i] for i in indices]
     tgt = [rel_tgt_v[i] for i in indices]
 
-    
-    
+
+
     with torch.no_grad():
-        
+
         for i,path_txt in enumerate(tgt):
             if i % 1000 == 0:
                 print(f"{i} sur {len(tgt)}")
@@ -76,57 +77,53 @@ def calculate_perplexity(model):
             int_list = [rel_to_int[src[i]], rel_to_int[SEP_TOKEN]]
             path_sum = 0
             path_tok = 0
-            
+
             for j in range(len(path)-1):
                 model.eval()
                 int_list.append(rel_to_int[path[j]])
                 int_vector = torch.tensor(int_list).unsqueeze(0).to(device)
- 
+
                 predictions = model(int_vector)
-                
+
                 prob = F.softmax(predictions, dim=1)[0][rel_to_int[path[j+1]]].item()
-                
+                if prob == 0:
+                    prob = 1e-10
                 path_sum += log(prob)
                 path_tok += 1
                 total_tokens += 1
                 sum_prob += log(prob)
                 int_list = int_list[1:]
 
-            if i % 100 == 0:
+            if i % 1000 == 0:
                 print(f"Path {i} -- Sum: {path_sum} -- Tokens: {path_tok} -- Perp: {exp(-path_sum / path_tok)}")
     return exp(-sum_prob / total_tokens), total_tokens
-
-
-
-
-
-
 
 
 def train(model, epochs, dataloader, criterion, optimizer, calculate_perplexity):
     best_perplexity = np.inf
     best_model_wts = copy.deepcopy(model.state_dict())
     somme = 0
+    best_epoch = 0
     for epoch in range(epochs):
         model.train()
         running_loss = 0
-        k = 0
+        k=0
         for batch in dataloader:
+            if k % 1000 == 0:
+                print(f"{k} sur {len(dataloader)}")
+            k+=1
             input_seq = torch.tensor([item[:-1] for item in batch]).to(device)
             target_seq = torch.tensor([item[-1] for item in batch]).to(device)
 
-            if k % 100 == 0:
-                print(f"Epoch {epoch}\t\tBatch {k} sur {len(dataloader)}")
-            k += 1
-            
+
             model.zero_grad()
-            
+
             logits = model(input_seq)
             loss = criterion(logits, target_seq)
 
             loss.backward()
             optimizer.step()
-            
+
             running_loss += loss.detach().cpu().numpy()
 
         epoch_loss = running_loss / len(dataloader)
@@ -140,14 +137,15 @@ def train(model, epochs, dataloader, criterion, optimizer, calculate_perplexity)
         print(f"Perplexity: {perplexity}")
         # Sauvegarde du modèle si la perplexité est la meilleure
         if perplexity < best_perplexity:
+            best_epoch = epoch
             best_perplexity = perplexity
             best_model_wts = copy.deepcopy(model.state_dict())
-            torch.save(best_model_wts, 'transformer/code/best_model.pth')
+            torch.save(best_model_wts, 'transformer/code/best_model_ngram.pth')
             print(f"Model saved with perplexity: {perplexity}")
         print()
-    model.load_state_dict(torch.load('transformer/code/best_model.pth'))
+    model.load_state_dict(torch.load('transformer/code/best_model_ngram.pth'))
     print(f"Average perplexity : {somme/epochs}")
-    print(f'Best perplexity: {best_perplexity}')
+    print(f'Best perplexity: {best_perplexity} epoch: {best_epoch}')
     return model, best_perplexity
 
 

@@ -77,6 +77,6 @@ def import_model():
 
 
 
-model = import_model()
-perplexity, tokens = calculate_perplexity(model)
-print(f"Perplexity: {perplexity} -- Tokens: {tokens}") 
+#model = import_model()
+#perplexity, tokens = calculate_perplexity(model)
+#print(f"Perplexity: {perplexity} -- Tokens: {tokens}") 

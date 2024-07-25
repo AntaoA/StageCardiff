@@ -27,7 +27,7 @@ else:
 
 # Espace de recherche des hyperparamètres
 space = {
-    'epochs': hp.quniform('epochs', 5, 20, 1),
+    'epochs': hp.quniform('epochs', 5, 30, 1),
     'batch_size': hp.quniform('batch_size', 16, 128, 1),
     'hidden_dim': hp.quniform('hidden_dim', 32, 512, 1),
     'embed_dim': hp.quniform('embed_dim', 16, 256, 1),

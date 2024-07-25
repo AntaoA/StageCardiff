@@ -4,7 +4,7 @@ from module_transformer import TextDataset, TextGen
 from transformer_train import train
 import torch.nn as nn
 import torch.optim as optim
-from transformer_param import SEQUENCE_LENGTH, device, chemin_data_train
+from transformer_param import SEQUENCE_LENGTH, device, chemin_data_train, epochs
 from transformer_validation import calculate_perplexity
 import os
 import pickle
@@ -29,13 +29,12 @@ else:
 
 # Espace de recherche des hyperparamètres
 space = {
-    'epochs': hp.quniform('epochs', 5, 20, 1),
-    'batch_size': hp.quniform('batch_size', 16, 128, 1),
+    'batch_size': hp.quniform('batch_size', 16, 512, 1),
     'num_layers': hp.quniform('num_layers', 1, 12, 1),
-    'num_heads': hp.quniform('num_heads', 1, 16, 1),
-    'embed_dim_multiplier': hp.quniform('embed_dim', 2, 32, 2),
-    'learning_rate': hp.uniform('learning_rate', 0.00001, 0.1),
-    'dropout': hp.uniform('dropout', 0.1, 0.5)
+    'num_heads': hp.quniform('num_heads', 1, 12, 1),
+    'embed_dim_multiplier': hp.quniform('embed_dim', 2, 64, 2),
+    'learning_rate': hp.uniform('learning_rate', 0.0005, 0.001),
+    'dropout': hp.uniform('dropout', 0.1, 0.4)
 }
 
 
@@ -67,7 +66,7 @@ def objective(params):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=params['learning_rate'])
     # Entraînement
-    m, best_perplexity = train(model, int(params['epochs']), dataloader, criterion, optimizer, calculate_perplexity)
+    m, best_perplexity = train(model, epochs, dataloader, criterion, optimizer, calculate_perplexity)
     # Calculer la perte (ou une autre métrique) pour évaluer le modèle
     # Utiliser une simple moyenne de la perte d'entraînement pour cet exemple
     print("Perplexity:", best_perplexity)
@@ -78,6 +77,6 @@ def objective(params):
 trials = Trials()
 
 # Exécuter l'optimisation
-best = fmin(fn=objective, space=space, algo=tpe.suggest, max_evals=100, trials=trials)
+best = fmin(fn=objective, space=space, algo=tpe.suggest, max_evals=20, trials=trials)
 
 print("Best hyperparameters found:", best)

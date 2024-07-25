@@ -1,4 +1,4 @@
-from transformer_param import chemin_data_validation, chemin_data_train, chemin_t, device, BATCH_SIZE, SEQUENCE_LENGTH, PAD_TOKEN, SEP_TOKEN, START_TOKEN, END_TOKEN
+from transformer_param import chemin_data_validation, chemin_data_train, chemin_t, device, BATCH_SIZE, SEQUENCE_LENGTH, PAD_TOKEN, SEP_TOKEN, START_TOKEN, END_TOKEN, name_transformer
 import os
 import pickle
 import torch
@@ -36,8 +36,9 @@ def calculate_perplexity(model, rel_src=rel_src, rel_tgt=rel_tgt):
     total_tokens = 0
 
     # Obtenez 1000 indices aléatoires uniques
-    indices = random.sample(range(len(rel_src)), 1000)
-
+    #indices = random.sample(range(len(rel_src)), 1000)
+    indices = [i for i in range(len(rel_src))]
+    
     # Sélectionnez les éléments correspondants dans les deux listes
     src = [rel_src[i] for i in indices]
     tgt = [rel_tgt[i] for i in indices]
@@ -48,7 +49,7 @@ def calculate_perplexity(model, rel_src=rel_src, rel_tgt=rel_tgt):
         
         for i,path_txt in enumerate(tgt):
             if i % 1000 == 0:
-                print(f"{i} sur {len(tgt)}")
+                print(f"{i} sur {len(tgt)} -- sum = {sum_prob} -- tokens = {total_tokens}")
             path = [START_TOKEN] + path_txt.split() + [END_TOKEN]
             int_list = [rel_to_int[src[i]], rel_to_int[SEP_TOKEN]]
             path_sum = 0
@@ -68,14 +69,14 @@ def calculate_perplexity(model, rel_src=rel_src, rel_tgt=rel_tgt):
                 total_tokens += 1
                 sum_prob += log(prob)
 
-            if i % 100 == 0:
-                print(f"Path {i} -- Sum: {path_sum} -- Tokens: {path_tok} -- Perp: {exp(-path_sum / path_tok)}")
+            #if i % 100 == 0:
+            #    print(f"Path {i} -- Sum: {path_sum} -- Tokens: {path_tok} -- Perp: {exp(-path_sum / path_tok)}")
     return exp(-sum_prob / total_tokens), total_tokens
 
 
 def import_model():
-    if os.path.exists(chemin_t + 'transformer.pickle'):
-        with open(chemin_t + 'transformer.pickle', 'rb') as f:
+    if os.path.exists(chemin_t + "transformer_5-24.pickle"):
+        with open(chemin_t + name_transformer, 'rb') as f:
             model = pickle.load(f)
             return model
     else:
@@ -85,7 +86,5 @@ def import_model():
 
 
 
-
-
-#perplexity, tokens = calculate_perplexity(model)
+#perplexity, tokens = calculate_perplexity(import_model())
 #print(f"Perplexity: {perplexity} -- Tokens: {tokens}") 

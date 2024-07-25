@@ -374,4 +374,58 @@ Le bug résolu (le "loss" est important en fait).\\
 Les trois vont tourner en continu sur mon PC ce week-end, on va bien se marrer.
 \section*{Lundi 15-07 :}
 Mensonge, ils n'ont pas tourné. Ça va commencer aujourd'hui.\\
-\end{document} 
+Ok ça à tourné mais j'ai vraiment pas fait grand chose de plus... Un poil de fine-tuning et c'est tout.\\
+Faudra faire mieux les prochains jours.
+\section*{Mardi 16-07 :}
+J'ai regardé pour le fine-tuning.\\
+Ça pose quelques questions de comment je le met en place réélemment. Je verrais avec Akash demain normalement.\\
+Optimisation du LSTM. Ça tourne bien.\\
+\section*{Mercredi 17-07 :}
+Encore de l'optimisation. Ce soir j'aurais fini le LSTM normalement.\\
+J'ai implémenter le fine-tuning aussi, mais il faut que je regarde plus attentivement car lors du fine-tuning, ma perplexité semble "bloqué". Il faudra que je passe un coup au débugger.\\
+Ce qui est marrant c'est que globalement les meilleurs hyperparamètres sont proches les uns des autres pour les trois modèles différents.\\
+\section*{Jeudi 18-07 :}
+L'optimisation pour LSTM est bien terminé. Je vais faire pour N-gram. Ça ne devrait pas prendre trop de temps. Ensuite je verrais bien...\\
+J'ai toujours pas de vraies infos sur le fine-tuning.\\
+Je vais peut être regarder en autorisant 6 relations par chemins. Mais pas hyper évident à capturer les chemins dans ces conditions.
+\section*{Vendredi 19-07 :}
+J'ai fini l'optimisation pour le N-gram.\\
+Résultats cohérents. J'ai regarder aussi avec les données de tests entre N-gram, LSTM et Transformer et tout est logique.\\
+Je suis en train de faire les 6 relations. C'est bad long.\\
+Ok rendez-vous avec Steven Schockaert.\\
+Pour le fine tuning je vais obtenir un modèle par relation et lors du calcul de la perplexité je ferais appel au bon model correspondant.\\
+Il va falloir regarder pour les 6 relations.\\
+Si je suis motivé je peux aussi faire le input/no\_input.\\
+Regarder un fine tuning from scratch aussi mais ça peut faire du overfitting.\\
+Après il va falloir regarder les règles et comparer avec AnyBURL.\\
+J'ai déjà mon classifier.\\
+Il faudra que j'optimise les hyperparamètres.\\
+Ensuite Akash va me donner un format pour la sortie et je pourrais comparer avec les règles d'AnyBURL.\\
+Le format c'est :
+X   X   prob    rel0(X,Y) <= rel1(X,A), R2(A,B), R3(B,Y).\\
+\section*{Lundi 22-07 :}
+Formatage effectué.\\
+Je vais essayer de faire le fine-tuning là, avant d'envoyer mes résultats.\\
+L'entraînement est fait, avec la création des 438 modèles.\\
+Je regarde la perplexité avec les données de validation et les données de tests.\\
+Ok j'ai des résultats moins bon que ceux attendu. Je suppose que j'ai un problème quelque part (nonobstant pas sur à 1000 \%, faut peut être que je fasse un tour du model basique pour ne pas le remplacer quand j'ai un truc moins bon).\\
+Ah ouais, c'est surement ça, avec tous les triplets avec 0 chemins.\\
+Je regarde avec ça. Autre problème que j'ai, je comprend pas trop pourquoi le calcul de perplexité n'est pas déterministe.\\
+C'est beaucoup mieux mais encore juste derrière.\\
+\section*{Mardi 23-07 :}
+Je regarde relation par relation le pourquoi de la perplexité est plus haute.\\
+Pour cela calcule en même temps les perplexité pour le modèle classique et pour le fine-tunned.\\
+J'attendrais à ce que FT soit plus petit pour chaque relation, mais ça ne va pas être le cas et je vais investiger pourquoi.\\
+Ok je crois que j'ai le problème. Quand mon fine-tuning est moins performant que le modèle basique, ça m'enregistre tout de même le fine tuning, je ne sais exactement pourquoi. Il faut que je modifie ça. Je vais essayer d'enregistrer de base le modèle et de remplacer seulement si c'est mieux.\\
+J'ai trouvé. Comme j'introduisais le modèle de base une seule fois, ça devait le mettre à jour avec les copie (pourquoi ?) et donc ça faisais tout dérégler mon calcul de perplexité, qui devenais ahurissant. Maintenant je le réouvre à chaque cas, donc plus de soucis de ce sôté là. Je fais tourner puis ça devrait être pas si mal.\\
+\section*{Mercredi 24-07 :}
+Ça hyperparamètre le transformer pour finalise tout ok.\\
+Ça fait pas grand chose d'autre.\\
+Les JO ont commencé :)\\
+\section*{Jeudi 25-07 :}
+J'ai relancer un fine-tuning, c'est long mais ça sera assez bon à la fin.\\
+Je regarde en parallèle la prédiction des chemins. Le soucis c'est que le score d'un schemin, actuellement, c'est le produit des probabilités des tokens.\\
+Ça me donne plein de petites probabilité, et la somme est de 1, alors que moi je veux seulement la probabilité d'avoir un chemin correct, même si il ne sort pas souvent.\\
+Je regarde une log probabilité, mais je ne pense pas que ça va changé énormément de choses.\\
+
+\end{document}

@@ -11,8 +11,6 @@ from transformer_validation import calculate_perplexity
 import numpy as np
 import copy
 
-name_transformer = "transformer.pickle"
-
 if os.path.exists(chemin_data_train + 'index.pickle'):
     with open(chemin_data_train + 'index.pickle', 'rb') as f:
         int_to_rel, rel_to_int, rel_vocab, vocab_input, rel_to_int_input, int_to_rel_input = pickle.load(f)
@@ -64,52 +62,55 @@ def train(model, epochs, dataloader, criterion, optimizer, calculate_perplexity)
             loss.backward()
             optimizer.step()
             running_loss += loss.detach().cpu().numpy()
-
         epoch_loss = running_loss / len(dataloader)
         print(f"Epoch {epoch} - loss: {epoch_loss:.3f}")
-        print()
         # Phase d'évaluation
         model.eval()
         val_loss = 0.0
         perplexity, _ = calculate_perplexity(model)
         somme += perplexity
-        print(f"Perplexity: {perplexity}")
+        #print(f"Perplexity: {perplexity}")
         # Sauvegarde du modèle si la perplexité est la meilleure
         if perplexity < best_perplexity:
             best_perplexity = perplexity
             best_model_wts = copy.deepcopy(model.state_dict())
             torch.save(best_model_wts, 'transformer/code/best_model.pth')
             print(f"Model saved with perplexity: {perplexity}")
-        print()
+        else:
+            print(f"Model not saved - Perplexity: {perplexity}")
     model.load_state_dict(torch.load('transformer/code/best_model.pth'))
-    print(f"Average perplexity : {somme/epochs}")
-    print(f'Best perplexity: {best_perplexity}')
+    #print(f"Average perplexity : {somme/epochs}")
+    #print(f'Best perplexity: {best_perplexity}')
     return model, best_perplexity
 
+if True:
+    if os.path.exists(chemin_t + name_transformer):
+        with open(chemin_t + name_transformer, 'rb') as f:
+            model = pickle.load(f)
+    else:
+        model = TextGen(
+            vocab_size=rel_vocab_size, 
+            embed_dim=embed_dim,
+            num_layers=num_layers, 
+            num_heads=num_heads,
+            sequence_length=SEQUENCE_LENGTH,
+            dropout=dropout
+        ).to(device)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+        print(model)
+        # Total parameters and trainable parameters.
+        total_params = sum(p.numel() for p in model.parameters())
+        print(f"{total_params:,} total parameters.")
+        total_trainable_params = sum(
+            p.numel() for p in model.parameters() if p.requires_grad)
+        print(f"{total_trainable_params:,} training parameters.\n")
 
-if os.path.exists(chemin_t + name_transformer):
-    with open(chemin_t + name_transformer, 'rb') as f:
-        model = pickle.load(f)
-else:
-    model = TextGen(
-        vocab_size=rel_vocab_size, 
-        embed_dim=embed_dim,
-        num_layers=num_layers, 
-        num_heads=num_heads,
-        sequence_length=SEQUENCE_LENGTH,
-        dropout=dropout
-    ).to(device)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    print(model)
-    # Total parameters and trainable parameters.
-    total_params = sum(p.numel() for p in model.parameters())
-    print(f"{total_params:,} total parameters.")
-    total_trainable_params = sum(
-        p.numel() for p in model.parameters() if p.requires_grad)
-    print(f"{total_trainable_params:,} training parameters.\n")
+    #    model.load_state_dict(torch.load('transformer/code/best_model_5-12-avec-10-l4.pth'))
+        model, bp = train(model, epochs, dataloader, criterion, optimizer, calculate_perplexity) 
 
-#    model.load_state_dict(torch.load('transformer/code/best_model_5-12-avec-10-l4.pth'))
-    model, bp = train(model, epochs, dataloader, criterion, optimizer, calculate_perplexity) 
+        open(chemin_t + 'transformer.pickle', 'wb').write(pickle.dumps(model))
+        
+    #bp,t = calculate_perplexity(model)
 
-    open(chemin_t + 'transformer.pickle', 'wb').write(pickle.dumps(model))
+        print(f"Perplexity: {bp} -- epoch {epochs} -- LR {learning_rate} -- BS {BATCH_SIZE} -- embed_dim {embed_dim} -- num_layers {num_layers} -- num_heads {num_heads} -- dropout {dropout}") 

@@ -5,7 +5,7 @@ import os
 import pickle
 from transformer_param import START_TOKEN, END_TOKEN, PAD_TOKEN, SEP_TOKEN, SEQUENCE_LENGTH
 from transformer_param import chemin_t_data, nb_paths_per_triplet
-from transformer_param import chemin_data, chemin_data_train as chemin
+from transformer_param import chemin_data, chemin_data_validation as chemin
 import transformer_param as tp
 
 #chemin_data = "grail-master/data/fb237_v4_ind/"

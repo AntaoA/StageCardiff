@@ -3,9 +3,9 @@ import os
 import pickle
 from transformer_param import START_TOKEN, END_TOKEN, PAD_TOKEN, SEP_TOKEN
 from transformer_param import chemin_t_data
-from transformer_param import chemin_data, chemin_data_test as chemin
+from transformer_param import chemin_data, chemin_data_validation as chemin
 
-chemin_data = "grail-master/data/fb237_v4_ind/"
+chemin_data = "grail-master/data/fb237_v4/"
 
 # Dataset Preparation
 if os.path.exists(chemin + 'index.pickle'):
@@ -28,7 +28,7 @@ else:
     
     # Ajouter les relation et les relations inverses
     for line in lines:
-        line = line.strip()
+        line = line.strip() 
         rel_vocab.append(line)
         rel_vocab.append(line + '_input')
         rel_vocab.append(line + '-1')
@@ -88,60 +88,26 @@ else:
     for i in range(len(vocab_input)):
         for n1, n2 in triplet_from_rel[i]:
             G.add_edge(n1, n2, relation=int_to_rel_input[i][:-6])
-                       
+            
+    with open(chemin + 'graphe_train.pickle', 'wb') as f:
+        pickle.dump((G, triplet_from_rel), f)
 
-    
-    
-    somme_triplet = 0
-    somme_path = 0
-    for i in range(len(vocab_input)):
-        if chemin[-3::] == "in/":
-            print(f"voc {i} : {len(triplet_from_rel[i])} triplets")
-            if i % 2 == 0:
-                m = 0
-                for n1, n2 in triplet_from_rel[i]:
-                    directory = chemin + "list_paths/" + "rel_"+str(i) + "/"
-                    os.makedirs(directory, exist_ok=True)
-                    name_file = directory + "triplet_" + str(m) + '.pickle'
-                    if m % 10 == 0:
-                        print(m)
-                    m += 1
-                    if not os.path.exists(name_file):
-                        paths = list(nx.all_simple_paths(G, n1, n2, cutoff=4))
-                        paths_valid = []
-                        last_rel = (int_to_rel_input[i])[:-6]
-                        for path in paths:
-                            paths_rel = [[]]
-                            for j in range(len(path) - 1):
-                                d = G.get_edge_data(path[j], path[j+1])
-                                new_path_rel = []
-                                for p in paths_rel:
-                                    last_rel = p[-1] if len(p)>0 else last_rel
-                                    for r in d:
-                                        new_p = p + [d[r]['relation']]
-                                        if d[r]['relation'] == last_rel and path[j] == n1 and path[j+1] == n2:
-                                            continue
-                                        if j < 1 or path[j-1] != path[j+1] or inv(d[r]['relation'] != last_rel):
-                                            new_path_rel.append(new_p)
-                                paths_rel = new_path_rel
-                            paths_valid += paths_rel
-                        with open(name_file, 'wb') as g:
-                            pickle.dump(paths_valid, g)
-                        somme_path += len(paths_valid)
-                somme_triplet += len(triplet_from_rel[i])
-            
-            
-                
-            
-                print(f"Jusqu'à présent : {somme_path} paths : {somme_triplet} triplets\n")
-        else:
-            name_file = chemin + "list_paths/" + "rel_"+str(i) + '.pickle'
-            print(f"voc {i} : {len(triplet_from_rel[i])} triplets")
-            if i % 2 == 0 and not os.path.exists(name_file):   
-                list_paths = []
-                m = 0
-                for n1, n2 in triplet_from_rel[i]:
-                    m += 1
+
+somme_triplet = 0
+somme_path = 0
+for i in range(len(vocab_input)):
+    if chemin[-3::] == "in/":
+        print(f"voc {i} : {len(triplet_from_rel[i])} triplets")
+        if i % 2 == 0:
+            m = 0
+            for n1, n2 in triplet_from_rel[i]:
+                directory = chemin + "list_paths/" + "rel_"+str(i) + "/"
+                os.makedirs(directory, exist_ok=True)
+                name_file = directory + "triplet_" + str(m) + '.pickle'
+                if m % 10 == 0:
+                    print(m)
+                m += 1
+                if not os.path.exists(name_file):
                     paths = list(nx.all_simple_paths(G, n1, n2, cutoff=4))
                     paths_valid = []
                     last_rel = (int_to_rel_input[i])[:-6]
@@ -160,16 +126,48 @@ else:
                                         new_path_rel.append(new_p)
                             paths_rel = new_path_rel
                         paths_valid += paths_rel
-                    list_paths.append(paths_valid)
+                    with open(name_file, 'wb') as g:
+                        pickle.dump(paths_valid, g)
                     somme_path += len(paths_valid)
-                somme_triplet += len(triplet_from_rel[i])
+            somme_triplet += len(triplet_from_rel[i])
+        
+        
             
-            
-                with open(name_file, 'wb') as g:
-                    pickle.dump(list_paths, g)
-            
-                print(f"{len(list_paths)} paths")
-                print(f"Jusqu'à présent : {somme_path} paths : {somme_triplet} triplets\n")
-            
-    with open(chemin + 'graphe_train.pickle', 'wb') as f:
-        pickle.dump((G, triplet_from_rel), f)
+        
+            print(f"Jusqu'à présent : {somme_path} paths : {somme_triplet} triplets\n")
+    else:
+        name_file = chemin + "list_paths/" + "rel_"+str(i) + '.pickle'
+        print(f"voc {i} : {len(triplet_from_rel[i])} triplets")
+        if i % 2 == 0 and not os.path.exists(name_file):   
+            list_paths = []
+            m = 0
+            for n1, n2 in triplet_from_rel[i]:
+                m += 1
+                paths = list(nx.all_simple_paths(G, n1, n2, cutoff=4))
+                paths_valid = []
+                last_rel = (int_to_rel_input[i])[:-6]
+                for path in paths:
+                    paths_rel = [[]]
+                    for j in range(len(path) - 1):
+                        d = G.get_edge_data(path[j], path[j+1])
+                        new_path_rel = []
+                        for p in paths_rel:
+                            last_rel = p[-1] if len(p)>0 else last_rel
+                            for r in d:
+                                new_p = p + [d[r]['relation']]
+                                if d[r]['relation'] == last_rel and path[j] == n1 and path[j+1] == n2:
+                                    continue
+                                if j < 1 or path[j-1] != path[j+1] or inv(d[r]['relation'] != last_rel):
+                                    new_path_rel.append(new_p)
+                        paths_rel = new_path_rel
+                    paths_valid += paths_rel
+                list_paths.append(paths_valid)
+                somme_path += len(paths_valid)
+            somme_triplet += len(triplet_from_rel[i])
+        
+        
+            with open(name_file, 'wb') as g:
+                pickle.dump(list_paths, g)
+        
+            print(f"{len(list_paths)} paths")
+            print(f"Jusqu'à présent : {somme_path} paths : {somme_triplet} triplets\n")

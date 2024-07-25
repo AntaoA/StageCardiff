@@ -1,0 +1,1 @@
+Rel 298 - Initial Perplexity: 3.7102051723503005 -- Best Perplexity: 3.525539801522319

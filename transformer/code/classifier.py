@@ -197,12 +197,15 @@ else:
 rel_src = []
 rel_tgt = []
 
+proba = []
+
 for line in lines:
     pred, prob, prob_l = line.strip().decode('utf-8').split(":")
     if float(prob) > 0.01:
         prediction = pred.split()
         rel_src.append(prediction[2:])
         rel_tgt.append(prediction[0])
+        proba.append(float(prob))
 
 
 with open(chemin_t_data + "classification_path.txt", "w") as f:
@@ -210,7 +213,7 @@ with open(chemin_t_data + "classification_path.txt", "w") as f:
             sentence = " ".join(path) + " <SEP>"
             out = text_generator_with_confidence(sentence, 5)
             for r, p in out:
-                f.write(f"{path} : {rel_tgt[i]} : {r} : {p} \n")
+                f.write(f"{path} : {rel_tgt[i]} : {r} : {p} : {proba[i]} \n")
                 
 with open(chemin_t_data + "récap_classifier.txt", "w") as f:
     with open(chemin_t_data + "classification_path.txt", "r") as g:
@@ -221,7 +224,7 @@ with open(chemin_t_data + "récap_classifier.txt", "w") as f:
             trouve = False
             while True:
                 line = lines[i]
-                src, tgt, pred, prob = line.strip().split(" : ")
+                src, tgt, pred, prob, _ = line.strip().split(" : ")
                 if tgt == pred:
                     if j < 3:
                         h.write(f"{src} : {tgt} : {prob}\n")

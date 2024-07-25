@@ -1,9 +1,10 @@
 import torch
-from transformer_param import chemin_t_data, chemin_t, chemin_data_train, device, SEQUENCE_LENGTH, END_TOKEN
+from transformer_param import chemin_t_data, chemin_t, chemin_data_train, device, SEQUENCE_LENGTH, END_TOKEN, name_transformer
 import torch.nn.functional as F
 import pickle
+from math import log, exp
 
-with open(chemin_t + 'transformer_5-12.pickle', 'rb') as f:
+with open(chemin_t + name_transformer, 'rb') as f:
     model = pickle.load(f)
     model.to(device)
 
@@ -40,7 +41,7 @@ def text_generator(sentence, generate_length):
     
 def text_generator_with_confidence(sentence, generate_length, k):
     model.eval()
-    samples = [(" ".join(sentence.split()), 1.0, [])]        
+    samples = [(" ".join(sentence.split()), 0.0, [])]        
     for _ in range(generate_length):
         all_candidates = []
         for seq, score, list_prob in samples:
@@ -63,7 +64,7 @@ def text_generator_with_confidence(sentence, generate_length, k):
                 next_token_index = topk_indices[i].item()
                 next_token_prob = topk_probs[i].item()
                 next_token = int_to_rel[next_token_index]
-                candidate = (seq + " " + next_token, score * next_token_prob, list_prob + [next_token_prob])                                
+                candidate = (seq + " " + next_token, score + log(next_token_prob), list_prob + [next_token_prob])                                
                 all_candidates.append(candidate)
             
         # Order all candidates by their probability scores
@@ -80,9 +81,9 @@ with open(chemin_t_data + "nouvelles_relations.txt", "w") as f:
         print(j)
         j += 1
         sentence = r + " <SEP> <START>"
-        out = text_generator_with_confidence(sentence, SEQUENCE_LENGTH, 5)
+        out = text_generator_with_confidence(sentence, SEQUENCE_LENGTH, 10)
         for i in range(len(out)):
             path, p, pl = out[i]
-            f.write(f"{path} : {p} : {pl} \n")
+            f.write(f"{path} : {exp(p)} : {pl} \n")
 
 
